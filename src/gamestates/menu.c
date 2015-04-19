@@ -96,7 +96,7 @@ void Gamestate_Draw(struct Game *game, struct MenuResources* data) {
 
 	al_draw_bitmap(data->lines, 100, 136,0);
 
-	al_draw_bitmap(data->cable,0,150,0);
+	al_draw_bitmap(data->cable,0,151,0);
 
 	DrawCharacter(game, data->ego, al_map_rgb(255,255,255), 0);
 
@@ -256,7 +256,7 @@ bool Anim_FixGuitar(struct Game *game, struct TM_Action *action, enum TM_ActionS
 
 void Gamestate_Start(struct Game *game, struct MenuResources* data) {
 	data->cloud_position = 100;
-	SetCharacterPosition(game, data->ego, 22, 106, 0);
+	SetCharacterPosition(game, data->ego, 22, 107, 0);
 	SetCharacterPosition(game, data->cow, 35, 88, 0);
 	SelectSpritesheet(game, data->ego, "stand");
 	SelectSpritesheet(game, data->cow, "chew");
