@@ -48,43 +48,6 @@ void DrawTextWithShadow(ALLEGRO_FONT *font, ALLEGRO_COLOR color, float x, float 
 	al_draw_text(font, color, (int)x, (int)y, flags, text);
 }
 
-void FadeGamestate(struct Game *game, bool in) {
-	//TODO: reimplement
-/*	ALLEGRO_BITMAP* bitmap = al_create_bitmap(game->viewportWidth, game->viewportHeight);
-	al_set_target_bitmap(bitmap);
-	al_clear_to_color(al_map_rgb(0,0,0));
-	al_set_target_bitmap(al_get_backbuffer(game->display));
-	float fadeloop;
-	if (in) {
-		fadeloop = 255;
-	} else {
-		fadeloop = 0;
-	}
-	while ((in && fadeloop>=0) || (!in && fadeloop<255)) {
-		ALLEGRO_EVENT ev;
-		al_wait_for_event(game->event_queue, &ev);
-		if ((ev.type == ALLEGRO_EVENT_TIMER) && (ev.timer.source == game->timer)) {
-			LogicGamestates(game);
-			if (in) {
-				fadeloop-=10;
-			} else {
-				fadeloop+=10;
-			}
-		}
-		if (al_is_event_queue_empty(game->event_queue)) {
-			DrawGamestates(game);
-			al_draw_tinted_bitmap(bitmap,al_map_rgba_f(1,1,1,fadeloop/255.0),0,0,0);
-			DrawConsole(game);
-			al_flip_display();
-		}
-	}
-	al_destroy_bitmap(bitmap);
-	al_clear_to_color(al_map_rgb(0,0,0));
-	if (in) {
-		DrawGamestates(game);
-	}*/
-}
-
 /*! \brief Scales bitmap using software linear filtering method to current target. */
 void ScaleBitmap(ALLEGRO_BITMAP* source, int width, int height) {
 	if ((al_get_bitmap_width(source)==width) && (al_get_bitmap_height(source)==height)) {
@@ -304,4 +267,160 @@ void PrintConsole(struct Game *game, char* format, ...) {
 	al_draw_bitmap(con, 0, 0, 0);
 	al_set_target_bitmap(al_get_backbuffer(game->display));
 	al_destroy_bitmap(con);
+}
+
+
+void SelectSpritesheet(struct Game *game, struct Character *character, char* name) {
+	struct Spritesheet *tmp = character->spritesheets;
+	PrintConsole(game, "Selecting spritesheet for %s: %s", character->name, name);
+	if (!tmp) {
+		PrintConsole(game, "ERROR: No spritesheets registered for %s!", character->name);
+		return;
+	}
+	while (tmp) {
+		if (!strcmp(tmp->name, name)) {
+			character->spritesheet = tmp;
+			//game->level.sheet_rows = tmp->rows;
+			//game->level.sheet_cols = tmp->cols;
+			//game->level.sheet_blanks = tmp->blanks;
+			//game->level.sheet_speed_modifier = tmp->speed;
+			character->pos = 0;
+			//game->level.sheet_scale = tmp->scale;
+			//game->level.sheet_successor = tmp->successor;
+			if (character->bitmap) al_destroy_bitmap(character->bitmap);
+			character->bitmap = al_create_bitmap((game->viewport.height*0.25)*tmp->aspect*tmp->scale, (game->viewport.height*0.25)*tmp->scale); // FIXME: dimensions!
+			PrintConsole(game, "SUCCESS: Spritesheet for %s activated: %s (%dx%d)", character->name, name, al_get_bitmap_width(character->bitmap), al_get_bitmap_height(character->bitmap));
+			return;
+		}
+		tmp = tmp->next;
+	}
+	PrintConsole(game, "ERROR: No spritesheets registered for %s with given name: %s", character->name, name);
+	return;
+}
+
+void LoadSpritesheets(struct Game *game, struct Character *character) {
+	PrintConsole(game, "Loading spritesheets for character %s...", character->name);
+	struct Spritesheet *tmp = character->spritesheets;
+	while (tmp) {
+		if (!tmp->bitmap) {
+			char filename[255] = { };
+			snprintf(filename, 255, "sprites/%s/%s.png", character->name, tmp->name);
+			tmp->bitmap = LoadScaledBitmap(game, filename, (int)(game->viewport.height*0.25*tmp->aspect*tmp->scale)*tmp->cols, (int)(game->viewport.height*0.25*tmp->scale)*tmp->rows);
+		}
+		tmp = tmp->next;
+	}
+}
+
+void UnloadSpritesheets(struct Game *game, struct Character *character) {
+	PrintConsole(game, "Unloading spritesheets for character %s...", character->name);
+	struct Spritesheet *tmp = character->spritesheets;
+	while (tmp) {
+		if (tmp->bitmap) al_destroy_bitmap(tmp->bitmap);
+		tmp->bitmap = NULL;
+		tmp = tmp->next;
+	}
+}
+
+void RegisterSpritesheet(struct Game *game, struct Character *character, char* name) {
+	struct Spritesheet *s = character->spritesheets;
+	while (s) {
+		if (!strcmp(s->name, name)) {
+			//PrintConsole(game, "%s spritesheet %s already registered!", character->name, name);
+			return;
+		}
+		s = s->next;
+	}
+	PrintConsole(game, "Registering %s spritesheet: %s", character->name, name);
+	char filename[255] = { };
+	snprintf(filename, 255, "sprites/%s/%s.ini", character->name, name);
+	ALLEGRO_CONFIG *config = al_load_config_file(GetDataFilePath(game, filename));
+	s = malloc(sizeof(struct Spritesheet));
+	s->name = strdup(name);
+	s->bitmap = NULL;
+	s->cols = atoi(al_get_config_value(config, "", "cols"));
+	s->rows = atoi(al_get_config_value(config, "", "rows"));
+	s->blanks = atoi(al_get_config_value(config, "", "blanks"));
+	s->speed = atof(al_get_config_value(config, "", "speed"));
+	s->aspect = atof(al_get_config_value(config, "", "aspect"));
+	s->scale = atof(al_get_config_value(config, "", "scale"));
+	s->successor=NULL;
+	const char* successor = al_get_config_value(config, "", "successor");
+	if (successor) {
+		s->successor = malloc(255*sizeof(char));
+		strncpy(s->successor, successor, 255);
+	}
+	s->next = character->spritesheets;
+	character->spritesheets = s;
+	al_destroy_config(config);
+}
+
+struct Character* CreateCharacter(struct Game *game, char* name) {
+	PrintConsole(game, "Creating character %s...", name);
+	struct Character *character = malloc(sizeof(struct Character));
+	character->name = strdup(name);
+	character->angle = 0;
+	character->bitmap = NULL;
+	character->data = NULL;
+	character->pos = 0;
+	character->pos_tmp = 0;
+	character->x = -1;
+	character->y = -1;
+	character->spritesheets = NULL;
+	character->spritesheet = NULL;
+	return character;
+}
+
+void DestroyCharacter(struct Game *game, struct Character *character) {
+	PrintConsole(game, "Destroying character %s...", character->name);
+	UnloadSpritesheets(game, character);
+	struct Spritesheet *tmp, *s = character->spritesheets;
+	tmp = s;
+	while (s) {
+		tmp = s;
+		s = s->next;
+		free(tmp);
+	}
+
+	if (character->bitmap) al_destroy_bitmap(character->bitmap);
+	free(character->name);
+	free(character);
+}
+
+void AnimateCharacter(struct Game *game, struct Character *character, float speed_modifier) {
+	if ((character->spritesheet->speed) && (speed_modifier)) {
+		character->pos_tmp+=character->spritesheet->speed*speed_modifier;
+		while (character->pos_tmp >= 1) {
+			character->pos++;
+			character->pos_tmp--;
+		}
+		if (character->pos>=character->spritesheet->cols*character->spritesheet->rows-character->spritesheet->blanks) {
+			character->pos=0;
+			if (character->spritesheet->successor) {
+				SelectSpritesheet(game, character, character->spritesheet->successor);
+			}
+		}
+	}
+}
+
+void MoveCharacter(struct Game *game, struct Character *character, float x, float y, float angle) {
+	character->x += x;
+	character->y += y;
+	character->angle += angle;
+}
+
+void SetCharacterPosition(struct Game *game, struct Character *character, float x, float y, float angle) {
+	character->x = x;
+	character->y = y;
+	character->angle = angle;
+}
+
+
+void DrawCharacter(struct Game *game, struct Character *character, ALLEGRO_COLOR tilt, int flags) {
+	al_set_target_bitmap(character->bitmap);
+	al_clear_to_color(al_map_rgba(0,0,0,0));
+	al_draw_bitmap_region(character->spritesheet->bitmap, al_get_bitmap_width(character->bitmap)*(character->pos%character->spritesheet->cols),al_get_bitmap_height(character->bitmap)*(character->pos/character->spritesheet->cols),al_get_bitmap_width(character->bitmap), al_get_bitmap_height(character->bitmap),0,0,0);
+	al_set_target_bitmap(al_get_backbuffer(game->display));
+
+	al_draw_tinted_rotated_bitmap(character->bitmap, tilt, al_get_bitmap_width(character->bitmap), al_get_bitmap_height(character->bitmap)/2, character->x*game->viewport.width + al_get_bitmap_width(character->bitmap), character->y*game->viewport.height + al_get_bitmap_height(character->bitmap)/2, character->angle, flags); // FIXME: viewport height? omg character should have its dimensions ;_;
+
 }

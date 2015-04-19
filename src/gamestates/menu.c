@@ -178,7 +178,7 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 }
 
 void Gamestate_Stop(struct Game *game, struct MenuResources* data) {
-	FadeGamestate(game, false);
+
 }
 
 void ChangeMenuState(struct Game *game, struct MenuResources* data, enum menustate_enum state) {
@@ -207,11 +207,8 @@ void Gamestate_Unload(struct Game *game, struct MenuResources* data) {
 }
 
 void Gamestate_Start(struct Game *game, struct MenuResources* data) {
-
 	data->cloud_position = 100;
 	ChangeMenuState(game,data,MENUSTATE_MAIN);
-
-	FadeGamestate(game, true);
 }
 
 void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEGRO_EVENT *ev) {

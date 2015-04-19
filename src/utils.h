@@ -50,9 +50,6 @@ void DrawTextWithShadow(ALLEGRO_FONT *font, ALLEGRO_COLOR color, float x, float 
 /*! \brief Loads bitmap into memory and scales it with software linear filtering. */
 ALLEGRO_BITMAP* LoadScaledBitmap(struct Game *game, char* filename, int width, int height);
 
-/*! \brief Displays fade in or fade out animation on current gamestate. */
-void FadeGamestate(struct Game *game, bool in);
-
 /*! \brief Finds path for data file. */
 char* GetDataFilePath(struct Game *game, char* filename);
 
@@ -65,3 +62,47 @@ char* GetDataFilePath(struct Game *game, char* filename);
 void PrintConsole(struct Game *game, char* format, ...);
 
 void FatalError(struct Game *game, bool exit, char* format, ...);
+
+/*! \brief Structure representing one spritesheet for character animation. */
+struct Spritesheet {
+	char* name; /*!< Name of the spritesheet (used in file paths). */
+	ALLEGRO_BITMAP* bitmap; /*!< Spritesheet bitmap. */
+	int rows; /*!< Number of rows in the spritesheet. */
+	int cols; /*!< Number of columns in the spritesheet. */
+	int blanks; /*!< Number of blank frames at the end of the spritesheet. */
+	float speed; /*!< Speed modifier of spritesheet animation. */
+	float aspect; /*!< Aspect ratio of the frame. */
+	float scale; /*!< Scale modifier of the frame. */
+	char* successor; /*!< Name of animation successor. If it's not blank, then animation will be played only once. */
+	struct Spritesheet* next; /*!< Next spritesheet in the queue. */
+};
+
+/*! \brief Structure representing one visible character. */
+struct Character {
+	char* name; /*!< Name of the character (used in file paths). */
+	struct Spritesheet *spritesheet; /*!< Current spritesheet used by character. */
+	struct Spritesheet *spritesheets; /*!< List of all spritesheets registered to character. */
+	ALLEGRO_BITMAP* bitmap;
+	int pos; /*!< Current spritesheet position. */
+	float pos_tmp; /*!< A counter used to slow down spritesheet animation. */
+	float x; /*!< Horizontal position of character (0 - left, 1 - right side of maximal square). */
+	float y; /*!< Vertical position of character (0 - top, 1 - bottom). */
+	float angle; /*!< Characters display angle (radians). */
+	void* data; /*!< Additional, custom character data (HP etc.). */
+};
+
+
+void SelectSpritesheet(struct Game *game, struct Character *character, char* name);
+void RegisterSpritesheet(struct Game *game, struct Character *character, char* name);
+
+void DrawCharacter(struct Game *game, struct Character *character, ALLEGRO_COLOR tilt, int flags);
+
+struct Character* CreateCharacter(struct Game *game, char* name);
+void DestroyCharacter(struct Game *game, struct Character *character);
+
+void LoadSpritesheets(struct Game *game, struct Character *character);
+void UnloadSpritesheets(struct Game *game, struct Character *character);
+
+void AnimateCharacter(struct Game *game, struct Character *character, float speed_modifier);
+void MoveCharacter(struct Game *game, struct Character *character, float x, float y, float angle);
+void SetCharacterPosition(struct Game *game, struct Character *character, float x, float y, float angle);

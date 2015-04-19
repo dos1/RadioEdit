@@ -31,7 +31,6 @@ void Gamestate_Logic(struct Game *game, struct AboutResources* data) {
 	if (data->fadeloop==0) {
 		PrintConsole(game, "Fade in");
 		data->fadeloop=1;
-		FadeGamestate(game, true);
 	}
 	data->x+=0.00025;
 }
@@ -206,9 +205,6 @@ void Gamestate_Unload(struct Game *game, struct AboutResources* data) {
 }
 
 void Gamestate_Stop(struct Game *game, struct AboutResources* data) {
-	if (data->fadeloop!=0) {
-		FadeGamestate(game, false);
-	}
 	al_stop_sample_instance(data->music);
 }
 
