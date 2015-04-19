@@ -280,6 +280,11 @@ void SelectSpritesheet(struct Game *game, struct Character *character, char* nam
 	while (tmp) {
 		if (!strcmp(tmp->name, name)) {
 			character->spritesheet = tmp;
+			if (tmp->successor) {
+				character->successor = strdup(tmp->successor);
+			} else {
+				character->successor = NULL;
+			}
 			character->pos = 0;
 			if (character->bitmap) al_destroy_bitmap(character->bitmap);
 			character->bitmap = al_create_bitmap(tmp->width / tmp->cols, tmp->height / tmp->rows);
@@ -290,6 +295,11 @@ void SelectSpritesheet(struct Game *game, struct Character *character, char* nam
 	}
 	PrintConsole(game, "ERROR: No spritesheets registered for %s with given name: %s", character->name, name);
 	return;
+}
+
+void ChangeSpritesheet(struct Game *game, struct Character *character, char* name) {
+	if (character->successor) free(character->successor);
+	character->successor = strdup(name);
 }
 
 void LoadSpritesheets(struct Game *game, struct Character *character) {
@@ -361,6 +371,7 @@ struct Character* CreateCharacter(struct Game *game, char* name) {
 	character->y = -1;
 	character->spritesheets = NULL;
 	character->spritesheet = NULL;
+	character->successor = NULL;
 	return character;
 }
 
@@ -389,8 +400,8 @@ void AnimateCharacter(struct Game *game, struct Character *character, float spee
 		}
 		if (character->pos>=character->spritesheet->cols*character->spritesheet->rows-character->spritesheet->blanks) {
 			character->pos=0;
-			if (character->spritesheet->successor) {
-				SelectSpritesheet(game, character, character->spritesheet->successor);
+			if (character->successor) {
+				SelectSpritesheet(game, character, character->successor);
 			}
 		}
 	}

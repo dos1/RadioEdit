@@ -23,9 +23,10 @@
 #include <allegro5/allegro_ttf.h>
 #include "../config.h"
 #include "../utils.h"
+#include "../timeline.h"
 #include "menu.h"
 
-int Gamestate_ProgressCount = 16;
+int Gamestate_ProgressCount = 18;
 
 void DrawMenuState(struct Game *game, struct MenuResources *data) {
 	ALLEGRO_FONT *font = data->font;
@@ -108,11 +109,14 @@ void Gamestate_Logic(struct Game *game, struct MenuResources* data) {
 	data->cloud_position-=0.1;
 	if (data->cloud_position<-40) { data->cloud_position=100; PrintConsole(game, "cloud_position"); }
 	AnimateCharacter(game, data->ego, 1);
+	TM_Process(data->timeline);
 }
 
 void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 
 	struct MenuResources *data = malloc(sizeof(struct MenuResources));
+
+	data->timeline = TM_Init(game, "main");
 
 	data->options.fullscreen = game->config.fullscreen;
 	data->options.fps = game->config.fps;
@@ -148,7 +152,15 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	data->cable = al_load_bitmap( GetDataFilePath(game, "cable.png") );
 	(*progress)(game);
 
+	data->sample = al_load_sample( GetDataFilePath(game, "menu.flac") );
+	(*progress)(game);
+
 	data->click_sample = al_load_sample( GetDataFilePath(game, "click.flac") );
+	(*progress)(game);
+
+	data->music = al_create_sample_instance(data->sample);
+	al_attach_sample_instance_to_mixer(data->music, game->audio.music);
+	al_set_sample_instance_playmode(data->music, ALLEGRO_PLAYMODE_LOOP);
 	(*progress)(game);
 
 	data->click = al_create_sample_instance(data->click_sample);
@@ -173,17 +185,17 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 
 	data->ego = CreateCharacter(game, "ego");
 	RegisterSpritesheet(game, data->ego, "stand");
+	RegisterSpritesheet(game, data->ego, "fix");
+	RegisterSpritesheet(game, data->ego, "fix2");
+	RegisterSpritesheet(game, data->ego, "fix3");
 	LoadSpritesheets(game, data->ego);
-
-	SelectSpritesheet(game, data->ego, "stand");
-	SetCharacterPosition(game, data->ego, 22, 106, 0);
 
 	al_set_target_backbuffer(game->display);
 	return data;
 }
 
 void Gamestate_Stop(struct Game *game, struct MenuResources* data) {
-
+	al_stop_sample_instance(data->music);
 }
 
 void ChangeMenuState(struct Game *game, struct MenuResources* data, enum menustate_enum state) {
@@ -206,17 +218,34 @@ void Gamestate_Unload(struct Game *game, struct MenuResources* data) {
 	al_destroy_font(data->font_subtitle);
 	al_destroy_font(data->font);
 	al_destroy_font(data->font_selected);
+	al_destroy_sample_instance(data->music);
 	al_destroy_sample_instance(data->click);
+	al_destroy_sample(data->sample);
 	al_destroy_sample(data->click_sample);
 	DestroyCharacter(game, data->ego);
+	TM_Destroy(data->timeline);
+}
+
+bool Anim_FixGuitar(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
+	struct MenuResources *data = action->arguments->value;
+	if (state == TM_ACTIONSTATE_START) {
+		ChangeSpritesheet(game, data->ego, "fix");
+		TM_AddQueuedBackgroundAction(data->timeline, &Anim_FixGuitar, TM_AddToArgs(NULL, 1, data), 30*1000, "fix_guitar");
+	}
+	return true;
 }
 
 void Gamestate_Start(struct Game *game, struct MenuResources* data) {
 	data->cloud_position = 100;
+	SelectSpritesheet(game, data->ego, "stand");
+	SetCharacterPosition(game, data->ego, 22, 106, 0);
 	ChangeMenuState(game,data,MENUSTATE_MAIN);
+	TM_AddQueuedBackgroundAction(data->timeline, &Anim_FixGuitar, TM_AddToArgs(NULL, 1, data), 15*1000, "fix_guitar");
+	al_play_sample_instance(data->music);
 }
 
 void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEGRO_EVENT *ev) {
+	TM_HandleEvent(data->timeline, ev);
 
 	if (ev->type != ALLEGRO_EVENT_KEY_DOWN) return;
 

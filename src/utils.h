@@ -83,6 +83,7 @@ struct Character {
 	char* name; /*!< Name of the character (used in file paths). */
 	struct Spritesheet *spritesheet; /*!< Current spritesheet used by character. */
 	struct Spritesheet *spritesheets; /*!< List of all spritesheets registered to character. */
+	char* successor;
 	ALLEGRO_BITMAP* bitmap;
 	int pos; /*!< Current spritesheet position. */
 	int pos_tmp; /*!< A counter used to slow down spritesheet animation. */
