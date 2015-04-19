@@ -10,7 +10,7 @@ Compilation:
 
 Running (from top directory):
 
-	build/superderpy
+	build/src/radioedit
 
 Installation (as root):
 
