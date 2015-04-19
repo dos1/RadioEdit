@@ -236,7 +236,7 @@ char* GetDataFilePath(struct Game *game, char* filename) {
 		al_destroy_path(data);
 		al_destroy_path(path);
 	}
-	TestPath("../share/superderpy/data/");
+	TestPath("../share/radioedit/data/");
 	TestPath("../data/");
 	TestPath("../Resources/data/");
 	TestPath("data/");
