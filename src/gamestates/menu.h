@@ -40,9 +40,9 @@ struct MenuResources {
 		ALLEGRO_BITMAP *stage;
 		ALLEGRO_BITMAP *speaker;
 		ALLEGRO_BITMAP *lines;
-		ALLEGRO_BITMAP *cow;
 		ALLEGRO_BITMAP *cable;
 		struct Character *ego;
+		struct Character *cow;
 		struct Timeline *timeline;
 		float cloud_position; /*!< Position of bigger cloud. */
 		ALLEGRO_SAMPLE *sample; /*!< Music sample. */

@@ -88,7 +88,7 @@ void Gamestate_Draw(struct Game *game, struct MenuResources* data) {
 	al_draw_bitmap(data->forest,0, 0,0);
 	al_draw_bitmap(data->grass,0, 0,0);
 
-	al_draw_bitmap(data->cow,35,88, 0);
+	DrawCharacter(game, data->cow, al_map_rgb(255,255,255), 0);
 
 	al_draw_bitmap(data->speaker,104, 19,0);
 
@@ -109,6 +109,7 @@ void Gamestate_Logic(struct Game *game, struct MenuResources* data) {
 	data->cloud_position-=0.1;
 	if (data->cloud_position<-40) { data->cloud_position=100; PrintConsole(game, "cloud_position"); }
 	AnimateCharacter(game, data->ego, 1);
+	AnimateCharacter(game, data->cow, 1);
 	TM_Process(data->timeline);
 }
 
@@ -138,9 +139,6 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	(*progress)(game);
 
 	data->stage = al_load_bitmap( GetDataFilePath(game, "stage.png") );
-	(*progress)(game);
-
-	data->cow = al_load_bitmap( GetDataFilePath(game, "cow.png") );
 	(*progress)(game);
 
 	data->cloud = al_load_bitmap( GetDataFilePath(game, "cloud.png") );
@@ -190,6 +188,16 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	RegisterSpritesheet(game, data->ego, "fix3");
 	LoadSpritesheets(game, data->ego);
 
+	(*progress)(game);
+
+	data->cow = CreateCharacter(game, "cow");
+	RegisterSpritesheet(game, data->cow, "stand");
+	RegisterSpritesheet(game, data->cow, "chew");
+	RegisterSpritesheet(game, data->cow, "look");
+	LoadSpritesheets(game, data->cow);
+
+	(*progress)(game);
+
 	al_set_target_backbuffer(game->display);
 	return data;
 }
@@ -212,7 +220,6 @@ void Gamestate_Unload(struct Game *game, struct MenuResources* data) {
 	al_destroy_bitmap(data->stage);
 	al_destroy_bitmap(data->speaker);
 	al_destroy_bitmap(data->lines);
-	al_destroy_bitmap(data->cow);
 	al_destroy_bitmap(data->cable);
 	al_destroy_font(data->font_title);
 	al_destroy_font(data->font_subtitle);
@@ -223,7 +230,18 @@ void Gamestate_Unload(struct Game *game, struct MenuResources* data) {
 	al_destroy_sample(data->sample);
 	al_destroy_sample(data->click_sample);
 	DestroyCharacter(game, data->ego);
+	DestroyCharacter(game, data->cow);
 	TM_Destroy(data->timeline);
+}
+
+// TODO: refactor to single Enqueue_Anim
+bool Anim_CowLook(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
+	struct MenuResources *data = action->arguments->value;
+	if (state == TM_ACTIONSTATE_START) {
+		ChangeSpritesheet(game, data->cow, "look");
+		TM_AddQueuedBackgroundAction(data->timeline, &Anim_CowLook, TM_AddToArgs(NULL, 1, data), 54*1000, "cow_look");
+	}
+	return true;
 }
 
 bool Anim_FixGuitar(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
@@ -235,12 +253,16 @@ bool Anim_FixGuitar(struct Game *game, struct TM_Action *action, enum TM_ActionS
 	return true;
 }
 
+
 void Gamestate_Start(struct Game *game, struct MenuResources* data) {
 	data->cloud_position = 100;
-	SelectSpritesheet(game, data->ego, "stand");
 	SetCharacterPosition(game, data->ego, 22, 106, 0);
+	SetCharacterPosition(game, data->cow, 35, 88, 0);
+	SelectSpritesheet(game, data->ego, "stand");
+	SelectSpritesheet(game, data->cow, "chew");
 	ChangeMenuState(game,data,MENUSTATE_MAIN);
 	TM_AddQueuedBackgroundAction(data->timeline, &Anim_FixGuitar, TM_AddToArgs(NULL, 1, data), 15*1000, "fix_guitar");
+	TM_AddQueuedBackgroundAction(data->timeline, &Anim_CowLook, TM_AddToArgs(NULL, 1, data), 5*1000, "cow_look");
 	al_play_sample_instance(data->music);
 }
 

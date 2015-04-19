@@ -95,6 +95,7 @@ struct Character {
 
 
 void SelectSpritesheet(struct Game *game, struct Character *character, char* name);
+void ChangeSpritesheet(struct Game *game, struct Character *character, char* name);
 void RegisterSpritesheet(struct Game *game, struct Character *character, char* name);
 
 void DrawCharacter(struct Game *game, struct Character *character, ALLEGRO_COLOR tilt, int flags);
