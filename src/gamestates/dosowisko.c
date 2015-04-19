@@ -106,17 +106,21 @@ void Gamestate_Draw(struct Game *game, struct dosowiskoResources* data) {
 		al_clear_to_color(al_map_rgba(0,0,0,0));
 
 		al_draw_text(data->font, al_map_rgba(255,255,255,10), game->viewport.width/2, game->viewport.height*0.4167, ALLEGRO_ALIGN_CENTRE, t);
-		al_set_target_backbuffer(game->display);
-
-		al_clear_to_color(al_map_rgb(35, 31, 32));
 
 		double tg = tan(-data->tan/384.0 * ALLEGRO_PI - ALLEGRO_PI/2);
 
 		int fade = data->fadeout ? 255 : data->fade;
 
+		al_set_target_bitmap(data->pixelator);
+		al_clear_to_color(al_map_rgb(35, 31, 32));
+
 		al_draw_tinted_scaled_bitmap(data->bitmap, al_map_rgba(fade, fade, fade, fade), 0, 0, al_get_bitmap_width(data->bitmap), al_get_bitmap_height(data->bitmap), -tg*al_get_bitmap_width(data->bitmap)*0.05, -tg*al_get_bitmap_height(data->bitmap)*0.05, al_get_bitmap_width(data->bitmap)+tg*0.1*al_get_bitmap_width(data->bitmap), al_get_bitmap_height(data->bitmap)+tg*0.1*al_get_bitmap_height(data->bitmap), 0);
 
 		al_draw_bitmap(data->checkerboard, 0, 0, 0);
+
+		al_set_target_backbuffer(game->display);
+
+		al_draw_bitmap(data->pixelator, 0, 0, 0);
 
 	}
 }
@@ -155,6 +159,7 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	data->timeline = TM_Init(game, "main");
 	data->bitmap = al_create_bitmap(game->viewport.width, game->viewport.height);
 	data->checkerboard = al_create_bitmap(game->viewport.width, game->viewport.height);
+	data->pixelator = al_create_bitmap(game->viewport.width, game->viewport.height);
 
 	al_set_target_bitmap(data->checkerboard);
 	al_lock_bitmap(data->checkerboard, ALLEGRO_PIXEL_FORMAT_ANY, ALLEGRO_LOCK_WRITEONLY);
@@ -208,6 +213,7 @@ void Gamestate_Unload(struct Game *game, struct dosowiskoResources* data) {
 	al_destroy_sample(data->key_sample);
 	al_destroy_bitmap(data->bitmap);
 	al_destroy_bitmap(data->checkerboard);
+	al_destroy_bitmap(data->pixelator);
 	TM_Destroy(data->timeline);
 	free(data);
 }
