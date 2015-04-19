@@ -264,6 +264,7 @@ void Gamestate_Start(struct Game *game, struct MenuResources* data) {
 	TM_AddQueuedBackgroundAction(data->timeline, &Anim_FixGuitar, TM_AddToArgs(NULL, 1, data), 15*1000, "fix_guitar");
 	TM_AddQueuedBackgroundAction(data->timeline, &Anim_CowLook, TM_AddToArgs(NULL, 1, data), 5*1000, "cow_look");
 	al_play_sample_instance(data->music);
+	al_rest(0.01); // poor man's synchronization
 }
 
 void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEGRO_EVENT *ev) {
