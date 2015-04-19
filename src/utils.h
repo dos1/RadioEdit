@@ -70,8 +70,9 @@ struct Spritesheet {
 	int rows; /*!< Number of rows in the spritesheet. */
 	int cols; /*!< Number of columns in the spritesheet. */
 	int blanks; /*!< Number of blank frames at the end of the spritesheet. */
-	float speed; /*!< Speed modifier of spritesheet animation. */
-	float aspect; /*!< Aspect ratio of the frame. */
+	int width;
+	int height;
+	int delay;
 	float scale; /*!< Scale modifier of the frame. */
 	char* successor; /*!< Name of animation successor. If it's not blank, then animation will be played only once. */
 	struct Spritesheet* next; /*!< Next spritesheet in the queue. */
@@ -84,9 +85,9 @@ struct Character {
 	struct Spritesheet *spritesheets; /*!< List of all spritesheets registered to character. */
 	ALLEGRO_BITMAP* bitmap;
 	int pos; /*!< Current spritesheet position. */
-	float pos_tmp; /*!< A counter used to slow down spritesheet animation. */
-	float x; /*!< Horizontal position of character (0 - left, 1 - right side of maximal square). */
-	float y; /*!< Vertical position of character (0 - top, 1 - bottom). */
+	int pos_tmp; /*!< A counter used to slow down spritesheet animation. */
+	int x; /*!< Horizontal position of character. */
+	int y; /*!< Vertical position of character. */
 	float angle; /*!< Characters display angle (radians). */
 	void* data; /*!< Additional, custom character data (HP etc.). */
 };
@@ -104,5 +105,5 @@ void LoadSpritesheets(struct Game *game, struct Character *character);
 void UnloadSpritesheets(struct Game *game, struct Character *character);
 
 void AnimateCharacter(struct Game *game, struct Character *character, float speed_modifier);
-void MoveCharacter(struct Game *game, struct Character *character, float x, float y, float angle);
-void SetCharacterPosition(struct Game *game, struct Character *character, float x, float y, float angle);
+void MoveCharacter(struct Game *game, struct Character *character, int x, int y, float angle);
+void SetCharacterPosition(struct Game *game, struct Character *character, int x, int y, float angle);

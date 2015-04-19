@@ -95,9 +95,9 @@ void Gamestate_Draw(struct Game *game, struct MenuResources* data) {
 
 	al_draw_bitmap(data->lines, 100, 136,0);
 
-	al_draw_bitmap(data->cable,0,134,0);
-	al_draw_bitmap(data->ego,22,106,0);
+	al_draw_bitmap(data->cable,0,150,0);
 
+	DrawCharacter(game, data->ego, al_map_rgb(255,255,255), 0);
 
 	DrawTextWithShadow(data->font_title, al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.15, ALLEGRO_ALIGN_CENTRE, "Radio Edit");
 
@@ -107,6 +107,7 @@ void Gamestate_Draw(struct Game *game, struct MenuResources* data) {
 void Gamestate_Logic(struct Game *game, struct MenuResources* data) {
 	data->cloud_position-=0.1;
 	if (data->cloud_position<-40) { data->cloud_position=100; PrintConsole(game, "cloud_position"); }
+	AnimateCharacter(game, data->ego, 1);
 }
 
 void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
@@ -133,9 +134,6 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	(*progress)(game);
 
 	data->stage = al_load_bitmap( GetDataFilePath(game, "stage.png") );
-	(*progress)(game);
-
-	data->ego = al_load_bitmap( GetDataFilePath(game, "ego.png") );
 	(*progress)(game);
 
 	data->cow = al_load_bitmap( GetDataFilePath(game, "cow.png") );
@@ -173,6 +171,13 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 		exit(-1);
 	}
 
+	data->ego = CreateCharacter(game, "ego");
+	RegisterSpritesheet(game, data->ego, "stand");
+	LoadSpritesheets(game, data->ego);
+
+	SelectSpritesheet(game, data->ego, "stand");
+	SetCharacterPosition(game, data->ego, 22, 106, 0);
+
 	al_set_target_backbuffer(game->display);
 	return data;
 }
@@ -195,7 +200,6 @@ void Gamestate_Unload(struct Game *game, struct MenuResources* data) {
 	al_destroy_bitmap(data->stage);
 	al_destroy_bitmap(data->speaker);
 	al_destroy_bitmap(data->lines);
-	al_destroy_bitmap(data->ego);
 	al_destroy_bitmap(data->cow);
 	al_destroy_bitmap(data->cable);
 	al_destroy_font(data->font_title);
@@ -204,6 +208,7 @@ void Gamestate_Unload(struct Game *game, struct MenuResources* data) {
 	al_destroy_font(data->font_selected);
 	al_destroy_sample_instance(data->click);
 	al_destroy_sample(data->click_sample);
+	DestroyCharacter(game, data->ego);
 }
 
 void Gamestate_Start(struct Game *game, struct MenuResources* data) {
