@@ -82,7 +82,7 @@ void Gamestate_Draw(struct Game *game, struct MenuResources* data) {
 
 	al_draw_bitmap(data->bg,0, 0,0);
 
-	al_draw_bitmap(data->cloud,game->viewport.width*data->cloud_position/100, game->viewport.height*0.1,0);
+	al_draw_bitmap(data->cloud,game->viewport.width*data->cloud_position/100, 10 ,0);
 
 	al_draw_bitmap(data->forest,0, 0,0);
 	al_draw_bitmap(data->grass,0, 0,0);
@@ -99,14 +99,13 @@ void Gamestate_Draw(struct Game *game, struct MenuResources* data) {
 
 
 	DrawTextWithShadow(data->font_title, al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.15, ALLEGRO_ALIGN_CENTRE, "Radio Edit");
-	//DrawTextWithShadow(data->font_subtitle, al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.275, ALLEGRO_ALIGN_CENTRE, "Setlist:");
 
 	DrawMenuState(game, data);
 }
 
 void Gamestate_Logic(struct Game *game, struct MenuResources* data) {
 	data->cloud_position-=0.1;
-	if (data->cloud_position<-80) { data->cloud_position=100; PrintConsole(game, "cloud_position"); }
+	if (data->cloud_position<-40) { data->cloud_position=100; PrintConsole(game, "cloud_position"); }
 }
 
 void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
