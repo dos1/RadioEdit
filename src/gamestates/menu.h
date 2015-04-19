@@ -42,6 +42,7 @@ struct MenuResources {
 		ALLEGRO_BITMAP *lines;
 		ALLEGRO_BITMAP *ego;
 		ALLEGRO_BITMAP *cow;
+		ALLEGRO_BITMAP *cable;
 		float cloud_position; /*!< Position of bigger cloud. */
 		ALLEGRO_SAMPLE *click_sample; /*!< Click sound sample. */
 		ALLEGRO_SAMPLE_INSTANCE *click; /*!< Sample instance with click sound. */

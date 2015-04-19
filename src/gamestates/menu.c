@@ -25,7 +25,7 @@
 #include "../utils.h"
 #include "menu.h"
 
-int Gamestate_ProgressCount = 15;
+int Gamestate_ProgressCount = 16;
 
 void DrawMenuState(struct Game *game, struct MenuResources *data) {
 	ALLEGRO_FONT *font = data->font;
@@ -95,6 +95,7 @@ void Gamestate_Draw(struct Game *game, struct MenuResources* data) {
 
 	al_draw_bitmap(data->lines, 100, 136,0);
 
+	al_draw_bitmap(data->cable,0,134,0);
 	al_draw_bitmap(data->ego,22,106,0);
 
 
@@ -146,6 +147,8 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	data->lines = al_load_bitmap( GetDataFilePath(game, "lines.png") );
 	(*progress)(game);
 
+	data->cable = al_load_bitmap( GetDataFilePath(game, "cable.png") );
+	(*progress)(game);
 
 	data->click_sample = al_load_sample( GetDataFilePath(game, "click.flac") );
 	(*progress)(game);
@@ -194,6 +197,7 @@ void Gamestate_Unload(struct Game *game, struct MenuResources* data) {
 	al_destroy_bitmap(data->lines);
 	al_destroy_bitmap(data->ego);
 	al_destroy_bitmap(data->cow);
+	al_destroy_bitmap(data->cable);
 	al_destroy_font(data->font_title);
 	al_destroy_font(data->font_subtitle);
 	al_destroy_font(data->font);
