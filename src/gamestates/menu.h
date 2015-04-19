@@ -1,0 +1,69 @@
+/*! \file menu.h
+ *  \brief Main Menu view headers.
+ */
+/*
+ * Copyright (c) Sebastian Krzyszkowiak <dos@dosowisko.net>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
+ */
+
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_audio.h>
+
+/*! \brief Enum of menu states in Menu and Pause game states. */
+enum menustate_enum {
+	MENUSTATE_MAIN,
+	MENUSTATE_OPTIONS,
+	MENUSTATE_VIDEO,
+	MENUSTATE_AUDIO
+};
+
+/*! \brief Resources used by Menu state. */
+struct MenuResources {
+		ALLEGRO_BITMAP *bg; /*!< Bitmap with lower portion of menu landscape. */
+		ALLEGRO_BITMAP *cloud; /*!< Bitmap with bigger cloud. */
+		ALLEGRO_BITMAP *grass;
+		ALLEGRO_BITMAP *forest;
+		ALLEGRO_BITMAP *stage;
+		ALLEGRO_BITMAP *speaker;
+		ALLEGRO_BITMAP *lines;
+		ALLEGRO_BITMAP *ego;
+		ALLEGRO_BITMAP *cow;
+		float cloud_position; /*!< Position of bigger cloud. */
+		ALLEGRO_SAMPLE *click_sample; /*!< Click sound sample. */
+		ALLEGRO_SAMPLE_INSTANCE *click; /*!< Sample instance with click sound. */
+		ALLEGRO_FONT *font_title; /*!< Font of "Super Derpy" text. */
+		ALLEGRO_FONT *font_subtitle; /*!< Font of "Muffin Attack" text. */
+		ALLEGRO_FONT *font; /*!< Font of standard menu item. */
+		ALLEGRO_FONT *font_selected; /*!< Font of selected menu item. */
+		int selected; /*!< Number of selected menu item. */
+		enum menustate_enum menustate; /*!< Current menu page. */
+		struct {
+				bool fullscreen;
+				int fps;
+				int width;
+				int height;
+				int resolution;
+		} options; /*!< Options which can be changed in menu. */
+};
+
+// functions from the engine
+void SetupViewport(struct Game *game);
+void Console_Unload(struct Game *game);
+void Console_Load(struct Game *game);
+
+//void DrawMenuState(struct Game *game);
+//void ChangeMenuState(struct Game *game, enum menustate_enum state);

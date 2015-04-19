@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Radio Edit
+Exec=radioedit
+Comment=Don't let your amazing single be radio edited.
+Icon=radioedit
+Terminal=false
+Categories=Game;ArcadeGame;
