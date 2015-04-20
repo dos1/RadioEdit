@@ -44,6 +44,8 @@ struct MenuResources {
 		ALLEGRO_BITMAP *lines;
 		ALLEGRO_BITMAP *cable;
 
+		ALLEGRO_BITMAP *marksmall;
+		ALLEGRO_BITMAP *markbig;
 		int markx, marky;
 
 		struct Character *ego;

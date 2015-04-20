@@ -26,7 +26,7 @@
 #include "../timeline.h"
 #include "menu.h"
 
-int Gamestate_ProgressCount = 16;
+int Gamestate_ProgressCount = 18;
 
 void DrawMenuState(struct Game *game, struct MenuResources *data) {
 	ALLEGRO_FONT *font = data->font;
@@ -101,11 +101,24 @@ void Gamestate_Draw(struct Game *game, struct MenuResources* data) {
 	al_draw_bitmap(data->cable,0,151,0);
 
 	DrawCharacter(game, data->ego, al_map_rgb(255,255,255), 0);
-	DrawCharacter(game, data->stickman, al_map_rgb(255,255,255), 0);
 
 	if (data->menustate != MENUSTATE_HIDDEN) {
 		DrawTextWithShadow(data->font_title, al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.15, ALLEGRO_ALIGN_CENTRE, "Radio Edit");
 		DrawMenuState(game, data);
+	} else {
+
+		if (data->marky == 0) {
+			al_draw_bitmap(data->marksmall, data->markx, 128, 0);
+		} else if (data->marky == 1) {
+			al_draw_bitmap(data->marksmall, data->markx, 140, 0);
+		} else if (data->marky == 2) {
+			al_draw_bitmap(data->markbig, data->markx, 152, 0);
+		} else if (data->marky == 3) {
+			al_draw_bitmap(data->markbig, data->markx, 166, 0);
+		}
+
+		DrawCharacter(game, data->stickman, al_map_rgb(255,255,255), 0);
+
 	}
 }
 
@@ -156,6 +169,12 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	(*progress)(game);
 
 	data->cable = al_load_bitmap( GetDataFilePath(game, "cable.png") );
+	(*progress)(game);
+
+	data->marksmall = al_load_bitmap( GetDataFilePath(game, "mark-small.png") );
+	(*progress)(game);
+
+	data->markbig = al_load_bitmap( GetDataFilePath(game, "mark-big.png") );
 	(*progress)(game);
 
 	data->sample = al_load_sample( GetDataFilePath(game, "menu.flac") );
@@ -230,6 +249,8 @@ void Gamestate_Unload(struct Game *game, struct MenuResources* data) {
 	al_destroy_bitmap(data->speaker);
 	al_destroy_bitmap(data->lines);
 	al_destroy_bitmap(data->cable);
+	al_destroy_bitmap(data->marksmall);
+	al_destroy_bitmap(data->markbig);
 	al_destroy_font(data->font_title);
 	al_destroy_font(data->font);
 	al_destroy_sample_instance(data->music);
@@ -238,6 +259,7 @@ void Gamestate_Unload(struct Game *game, struct MenuResources* data) {
 	al_destroy_sample(data->click_sample);
 	DestroyCharacter(game, data->ego);
 	DestroyCharacter(game, data->cow);
+	DestroyCharacter(game, data->stickman);
 	TM_Destroy(data->timeline);
 }
 
@@ -267,6 +289,9 @@ void Gamestate_Start(struct Game *game, struct MenuResources* data) {
 	SetCharacterPosition(game, data->cow, 35, 88, 0);
 	SetCharacterPosition(game, data->stickman, 320, 132, 0);
 
+	data->markx = 119;
+	data->marky = 2;
+
 	SelectSpritesheet(game, data->stickman, "walk");
 	SelectSpritesheet(game, data->ego, "stand");
 	SelectSpritesheet(game, data->cow, "chew");
@@ -281,9 +306,43 @@ void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEG
 	TM_HandleEvent(data->timeline, ev);
 
 	if (data->menustate == MENUSTATE_HIDDEN) {
+		if (ev->type != ALLEGRO_EVENT_KEY_CHAR) return;
+
 		if (ev->keyboard.keycode==ALLEGRO_KEY_ESCAPE) {
 			ChangeMenuState(game,data,MENUSTATE_MAIN);
 		}
+
+		if (ev->keyboard.keycode==ALLEGRO_KEY_UP) {
+			data->marky--;
+			int min = 139-(data->marky*10);
+			int step = 10 - (data->markx - min) / ((320-min)/10);
+			data->markx+= step;
+			if (data->marky < 0) {
+				data->markx-=4*step;
+				data->marky = 3;
+			}
+		}
+
+		if (ev->keyboard.keycode==ALLEGRO_KEY_DOWN) {
+			data->marky++;
+			int min = 139-(data->marky*10);
+			int step = 10 - (data->markx - min) / ((320-min)/10);
+			data->markx-= step;
+			if (data->marky > 3) {
+				data->markx+=4*step;
+				data->marky = 0;
+			}
+		}
+
+		if (ev->keyboard.keycode==ALLEGRO_KEY_LEFT) {
+			data->markx-=2;
+		}
+
+		if (ev->keyboard.keycode==ALLEGRO_KEY_RIGHT) {
+			data->markx+=2;
+		}
+
+
 		return;
 	}
 
