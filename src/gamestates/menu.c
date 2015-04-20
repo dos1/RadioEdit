@@ -27,7 +27,7 @@
 #include "../timeline.h"
 #include "menu.h"
 
-int Gamestate_ProgressCount = 26;
+int Gamestate_ProgressCount = 30;
 
 void About(struct Game *game, struct MenuResources* data) {
 	ALLEGRO_TRANSFORM trans;
@@ -237,6 +237,12 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	data->click_sample = al_load_sample( GetDataFilePath(game, "click.flac") );
 	(*progress)(game);
 
+	data->quit_sample = al_load_sample( GetDataFilePath(game, "quit.flac") );
+	(*progress)(game);
+
+	data->end_sample = al_load_sample( GetDataFilePath(game, "end.flac") );
+	(*progress)(game);
+
 	data->music = al_create_sample_instance(data->sample);
 	al_attach_sample_instance_to_mixer(data->music, game->audio.music);
 	al_set_sample_instance_playmode(data->music, ALLEGRO_PLAYMODE_LOOP);
@@ -245,6 +251,16 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	data->click = al_create_sample_instance(data->click_sample);
 	al_attach_sample_instance_to_mixer(data->click, game->audio.fx);
 	al_set_sample_instance_playmode(data->click, ALLEGRO_PLAYMODE_ONCE);
+	(*progress)(game);
+
+	data->quit = al_create_sample_instance(data->quit_sample);
+	al_attach_sample_instance_to_mixer(data->quit, game->audio.fx);
+	al_set_sample_instance_playmode(data->quit, ALLEGRO_PLAYMODE_ONCE);
+	(*progress)(game);
+
+	data->end = al_create_sample_instance(data->end_sample);
+	al_attach_sample_instance_to_mixer(data->end, game->audio.fx);
+	al_set_sample_instance_playmode(data->end, ALLEGRO_PLAYMODE_ONCE);
 	(*progress)(game);
 
 	int i;
@@ -307,6 +323,14 @@ void ChangeMenuState(struct Game *game, struct MenuResources* data, enum menusta
 }
 
 void Gamestate_Unload(struct Game *game, struct MenuResources* data) {
+	if (game->config.fx) {
+		al_clear_to_color(al_map_rgb(0,0,0));
+		DrawConsole(game);
+		al_flip_display();
+		al_play_sample_instance(data->quit);
+		al_rest(2.75);
+	}
+
 	al_destroy_bitmap(data->bg);
 	al_destroy_bitmap(data->cloud);
 	al_destroy_bitmap(data->grass);
@@ -322,8 +346,12 @@ void Gamestate_Unload(struct Game *game, struct MenuResources* data) {
 	al_destroy_font(data->font);
 	al_destroy_sample_instance(data->music);
 	al_destroy_sample_instance(data->click);
+	al_destroy_sample_instance(data->end);
+	al_destroy_sample_instance(data->quit);
 	al_destroy_sample(data->sample);
 	al_destroy_sample(data->click_sample);
+	al_destroy_sample(data->quit_sample);
+	al_destroy_sample(data->end_sample);
 	int i;
 	for (i=0; i<7; i++) {
 		al_destroy_sample_instance(data->chords[i]);
@@ -477,6 +505,7 @@ void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEG
 						ChangeSpritesheet(game, data->ego, "play");
 						ChangeSpritesheet(game, data->cow, "chew");
 						ChangeMenuState(game,data,MENUSTATE_HIDDEN);
+						al_play_sample_instance(data->chords[0]);
 						break;
 					case 1:
 						ChangeMenuState(game,data,MENUSTATE_OPTIONS);

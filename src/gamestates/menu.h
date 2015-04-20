@@ -63,8 +63,12 @@ struct MenuResources {
 		float cloud_position; /*!< Position of bigger cloud. */
 		ALLEGRO_SAMPLE *sample; /*!< Music sample. */
 		ALLEGRO_SAMPLE *click_sample; /*!< Click sound sample. */
+		ALLEGRO_SAMPLE *quit_sample;
+		ALLEGRO_SAMPLE *end_sample;
 		ALLEGRO_SAMPLE_INSTANCE *music; /*!< Sample instance with music sound. */
 		ALLEGRO_SAMPLE_INSTANCE *click; /*!< Sample instance with click sound. */
+		ALLEGRO_SAMPLE_INSTANCE *quit;
+		ALLEGRO_SAMPLE_INSTANCE *end;
 		ALLEGRO_FONT *font_title; /*!< Font of "Super Derpy" text. */
 		ALLEGRO_FONT *font; /*!< Font of standard menu item. */
 		int selected; /*!< Number of selected menu item. */
@@ -82,6 +86,7 @@ struct MenuResources {
 void SetupViewport(struct Game *game);
 void Console_Unload(struct Game *game);
 void Console_Load(struct Game *game);
+void DrawConsole(struct Game *game);
 
 //void DrawMenuState(struct Game *game);
 //void ChangeMenuState(struct Game *game, enum menustate_enum state);
