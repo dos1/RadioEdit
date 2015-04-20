@@ -328,7 +328,14 @@ void Gamestate_Unload(struct Game *game, struct MenuResources* data) {
 		DrawConsole(game);
 		al_flip_display();
 		al_play_sample_instance(data->quit);
-		al_rest(2.75);
+		al_rest(0.3);
+		int i;
+		for (i=0;i<50; i++) {
+			al_rest(0.05);
+			ALLEGRO_KEYBOARD_STATE kb;
+			al_get_keyboard_state(&kb);
+			if (al_key_down(&kb, ALLEGRO_KEY_ESCAPE)) return;
+		}
 	}
 
 	al_destroy_bitmap(data->bg);
@@ -402,6 +409,11 @@ void Gamestate_Start(struct Game *game, struct MenuResources* data) {
 	TM_AddQueuedBackgroundAction(data->timeline, &Anim_CowLook, TM_AddToArgs(NULL, 1, data), 5*1000, "cow_look");
 	al_play_sample_instance(data->music);
 	al_rest(0.01); // poor man's synchronization
+
+	data->badguys[0] = NULL;
+	data->badguys[1] = NULL;
+	data->badguys[2] = NULL;
+	data->badguys[3] = NULL;
 }
 
 void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEGRO_EVENT *ev) {

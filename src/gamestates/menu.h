@@ -56,6 +56,11 @@ struct MenuResources {
 		int usage;
 		int lightx, lighty, lightanim;
 
+		struct Badguy {
+				struct Character *character;
+				struct Badguy *next;
+		} *badguys[4];
+
 		struct Character *ego;
 		struct Character *cow;
 		struct Character *stickman;
