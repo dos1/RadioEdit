@@ -2,6 +2,10 @@
 
 The game uses CMake as build system, so its building process is pretty typical.
 
+Dependences (for Debian-based distros):
+
+	sudo apt install liballegro5-dev liballegro-ttf5-dev liballegro-image5-dev liballegro-audio5-dev liballegro-acodec5-dev
+
 Compilation:
 
 	mkdir build; cd build
