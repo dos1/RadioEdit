@@ -145,8 +145,7 @@ void Console_Unload(struct Game *game) {
 }
 
 void derp(int sig) {
-	write(STDERR_FILENO, "Segmentation fault\n", 19);
-	write(STDERR_FILENO, "I just don't know what went wrong!\n", 35);
+	int __attribute__((unused)) n = write(STDERR_FILENO, "Segmentation fault\nI just don't know what went wrong!\n", 54);
 	abort();
 }
 
