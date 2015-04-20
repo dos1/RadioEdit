@@ -26,7 +26,7 @@
 #include "../timeline.h"
 #include "menu.h"
 
-int Gamestate_ProgressCount = 18;
+int Gamestate_ProgressCount = 25;
 
 void DrawMenuState(struct Game *game, struct MenuResources *data) {
 	ALLEGRO_FONT *font = data->font;
@@ -117,6 +117,14 @@ void Gamestate_Draw(struct Game *game, struct MenuResources* data) {
 			al_draw_bitmap(data->markbig, data->markx, 166, 0);
 		}
 
+        if (data->lightanim) {
+            int offset = -5;
+            if (data->lighty == 1) offset = -3;
+            if (data->lighty == 2) offset = 0;
+            if (data->lighty == 3) offset = 4;
+            al_draw_tinted_bitmap(data->light, al_map_rgba(255, 255, 255,rand() % 256 / 50 * 50) , data->lightx - 171 - (data->lighty < 2 ? 1 : 0), 109+(data->lighty*10) - 143 + offset, 0);
+        }
+
 		DrawCharacter(game, data->stickman, al_map_rgb(255,255,255), 0);
 
 	}
@@ -131,6 +139,9 @@ void Gamestate_Logic(struct Game *game, struct MenuResources* data) {
 	if (data->menustate == MENUSTATE_HIDDEN) {
 		MoveCharacter(game, data->stickman, -0.2, 0, 0);
 	}
+    if (data->usage) { data->usage--; }
+    if (data->lightanim) { data->lightanim++;}
+    if (data->lightanim > 25) { data->lightanim = 0; }
 	TM_Process(data->timeline);
 }
 
@@ -177,6 +188,9 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	data->markbig = al_load_bitmap( GetDataFilePath(game, "mark-big.png") );
 	(*progress)(game);
 
+    data->light = al_load_bitmap( GetDataFilePath(game, "light.png") );
+    (*progress)(game);
+
 	data->sample = al_load_sample( GetDataFilePath(game, "menu.flac") );
 	(*progress)(game);
 
@@ -192,6 +206,18 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	al_attach_sample_instance_to_mixer(data->click, game->audio.fx);
 	al_set_sample_instance_playmode(data->click, ALLEGRO_PLAYMODE_ONCE);
 	(*progress)(game);
+
+    int i;
+    for (i=0; i<6; i++) {
+        char name[] = "chords/0.flac";
+        name[7] = '1' + i;
+        data->chord_samples[i] = al_load_sample( GetDataFilePath(game, name) );
+
+        data->chords[i] = al_create_sample_instance(data->chord_samples[i]);
+        al_attach_sample_instance_to_mixer(data->chords[i], game->audio.fx);
+        al_set_sample_instance_playmode(data->chords[i], ALLEGRO_PLAYMODE_ONCE);
+        (*progress)(game);
+    }
 
 	data->font_title = al_load_ttf_font(GetDataFilePath(game, "fonts/MonkeyIsland.ttf"),game->viewport.height*0.16,0 );
 	(*progress)(game);
@@ -249,7 +275,8 @@ void Gamestate_Unload(struct Game *game, struct MenuResources* data) {
 	al_destroy_bitmap(data->speaker);
 	al_destroy_bitmap(data->lines);
 	al_destroy_bitmap(data->cable);
-	al_destroy_bitmap(data->marksmall);
+    al_destroy_bitmap(data->light);
+    al_destroy_bitmap(data->marksmall);
 	al_destroy_bitmap(data->markbig);
 	al_destroy_font(data->font_title);
 	al_destroy_font(data->font);
@@ -257,6 +284,11 @@ void Gamestate_Unload(struct Game *game, struct MenuResources* data) {
 	al_destroy_sample_instance(data->click);
 	al_destroy_sample(data->sample);
 	al_destroy_sample(data->click_sample);
+    int i;
+    for (i=0; i<6; i++) {
+        al_destroy_sample_instance(data->chords[i]);
+        al_destroy_sample(data->chord_samples[i]);
+    }
 	DestroyCharacter(game, data->ego);
 	DestroyCharacter(game, data->cow);
 	DestroyCharacter(game, data->stickman);
@@ -292,6 +324,8 @@ void Gamestate_Start(struct Game *game, struct MenuResources* data) {
 	data->markx = 119;
 	data->marky = 2;
 
+    data->usage = 0;
+
 	SelectSpritesheet(game, data->stickman, "walk");
 	SelectSpritesheet(game, data->ego, "stand");
 	SelectSpritesheet(game, data->cow, "chew");
@@ -309,7 +343,8 @@ void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEG
 		if (ev->type != ALLEGRO_EVENT_KEY_CHAR) return;
 
 		if (ev->keyboard.keycode==ALLEGRO_KEY_ESCAPE) {
-			ChangeMenuState(game,data,MENUSTATE_MAIN);
+			Gamestate_Stop(game,data);
+			Gamestate_Start(game,data);
 		}
 
 		if (ev->keyboard.keycode==ALLEGRO_KEY_UP) {
@@ -347,6 +382,20 @@ void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEG
 			if (data->markx > max) data->markx=max;
 		}
 
+        if ((ev->keyboard.keycode==ALLEGRO_KEY_SPACE) && (data->usage==0)) {
+            data->lightx = data->markx;
+            data->lighty = data->marky;
+            data->lightanim=1;
+            data->usage=30;
+
+            int num = rand() % 3;
+            if (((al_get_sample_instance_position(data->music) + 20000) / 44118) % 2 == 1) {
+               num += 3;
+            }
+            al_stop_sample_instance(data->chords[num]);
+            al_play_sample_instance(data->chords[num]);
+            PrintConsole(game, "playing chord nr %d", num);
+        }
 
 		return;
 	}
@@ -388,9 +437,8 @@ void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEG
 						ChangeMenuState(game,data,MENUSTATE_OPTIONS);
 						break;
 					case 2:
-						StopGamestate(game, "menu");
-						LoadGamestate(game, "about");
-						StartGamestate(game, "about");
+                        FatalError(game, false, "About screen not implemented! See http://dosowisko.net/radioedit/");
+                        al_flush_event_queue(game->_priv.event_queue);
 						break;
 					case 3:
 						UnloadGamestate(game, "menu");
@@ -511,7 +559,8 @@ void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEG
 				ChangeMenuState(game,data,MENUSTATE_MAIN);
 				break;
 			case MENUSTATE_HIDDEN:
-				ChangeMenuState(game,data,MENUSTATE_MAIN);
+				Gamestate_Stop(game,data);
+				Gamestate_Start(game,data);
 				break;
 			case MENUSTATE_VIDEO:
 				ChangeMenuState(game,data,MENUSTATE_OPTIONS);
