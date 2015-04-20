@@ -25,5 +25,5 @@
 
 /*! \brief Resources used by Loading state. */
 struct LoadingResources {
-	ALLEGRO_BITMAP *loading_bitmap; /*!< Rendered loading bitmap. */
+		ALLEGRO_BITMAP *loading_bitmap; /*!< Rendered loading bitmap. */
 };

@@ -43,18 +43,18 @@ struct MenuResources {
 		ALLEGRO_BITMAP *speaker;
 		ALLEGRO_BITMAP *lines;
 		ALLEGRO_BITMAP *cable;
-        ALLEGRO_BITMAP *light;
+		ALLEGRO_BITMAP *light;
 
 		ALLEGRO_BITMAP *marksmall;
 		ALLEGRO_BITMAP *markbig;
 		int markx, marky;
 
-        ALLEGRO_SAMPLE *chord_samples[7];
-        ALLEGRO_SAMPLE_INSTANCE *chords[7];
-        // 0-2: low; 3-5: high; 6 - solo
+		ALLEGRO_SAMPLE *chord_samples[7];
+		ALLEGRO_SAMPLE_INSTANCE *chords[7];
+		// 0-2: low; 3-5: high; 6 - solo
 
-        int usage;
-        int lightx, lighty, lightanim;
+		int usage;
+		int lightx, lighty, lightanim;
 
 		struct Character *ego;
 		struct Character *cow;

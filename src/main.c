@@ -443,7 +443,7 @@ int main(int argc, char **argv){
 
 			while (tmp) {
 
-				if ((tmp->pending_start) && (!tmp->started) && (tmp->loaded)) {					
+				if ((tmp->pending_start) && (!tmp->started) && (tmp->loaded)) {
 					PrintConsole(&game, "Starting gamestate \"%s\"...", tmp->name);
 					al_stop_timer(game._priv.timer);
 					(*tmp->api.Gamestate_Start)(&game, tmp->data);
@@ -477,11 +477,11 @@ int main(int argc, char **argv){
 			else if(ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
 				break;
 			}
-		#ifdef ALLEGRO_MACOSX
+#ifdef ALLEGRO_MACOSX
 			else if ((ev.type == ALLEGRO_EVENT_KEY_DOWN) && (ev.keyboard.keycode == 104)) { //TODO: report to upstream
-		#else
+#else
 			else if ((ev.type == ALLEGRO_EVENT_KEY_DOWN) && (ev.keyboard.keycode == ALLEGRO_KEY_TILDE)) {
-		#endif
+#endif
 				game._priv.showconsole = !game._priv.showconsole;
 			}
 			else if ((ev.type == ALLEGRO_EVENT_KEY_DOWN) && (game.config.debug) && (ev.keyboard.keycode == ALLEGRO_KEY_F1)) {

@@ -20,12 +20,12 @@
  */
 
 struct AboutResources {
-	ALLEGRO_BITMAP *image; /*!< Background bitmap. */
-	ALLEGRO_BITMAP *text_bitmap; /*!< Bitmap with scrolled text. */
-	ALLEGRO_BITMAP *letter; /*!< Paper bitmap. */
-	ALLEGRO_SAMPLE *sample; /*!< Sample with background music. */
-	ALLEGRO_SAMPLE_INSTANCE *music; /*!< Sample instance with background music. */
-	ALLEGRO_FONT *font; /*!< Font used in the text on letter. */
-	float x; /*!< Horizontal position of the text. */
-	int fadeloop; /*!< Loop counter used in fades. */
+		ALLEGRO_BITMAP *image; /*!< Background bitmap. */
+		ALLEGRO_BITMAP *text_bitmap; /*!< Bitmap with scrolled text. */
+		ALLEGRO_BITMAP *letter; /*!< Paper bitmap. */
+		ALLEGRO_SAMPLE *sample; /*!< Sample with background music. */
+		ALLEGRO_SAMPLE_INSTANCE *music; /*!< Sample instance with background music. */
+		ALLEGRO_FONT *font; /*!< Font used in the text on letter. */
+		float x; /*!< Horizontal position of the text. */
+		int fadeloop; /*!< Loop counter used in fades. */
 };
