@@ -26,7 +26,7 @@
 #include "../timeline.h"
 #include "menu.h"
 
-int Gamestate_ProgressCount = 18;
+int Gamestate_ProgressCount = 16;
 
 void DrawMenuState(struct Game *game, struct MenuResources *data) {
 	ALLEGRO_FONT *font = data->font;
@@ -67,6 +67,8 @@ void DrawMenuState(struct Game *game, struct MenuResources *data) {
 			DrawTextWithShadow(font, color, game->viewport.width*0.5, game->viewport.height*0.6, ALLEGRO_ALIGN_CENTRE, text);
 			DrawTextWithShadow(font, data->selected==3 ? al_map_rgb(255,255,160) : al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.8, ALLEGRO_ALIGN_CENTRE, "Back");
 			break;
+		case MENUSTATE_HIDDEN:
+			break;
 		default:
 			data->selected=0;
 			DrawTextWithShadow(font, data->selected==0 ? al_map_rgb(255,255,160) : al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.5, ALLEGRO_ALIGN_CENTRE, "Not implemented yet");
@@ -99,10 +101,12 @@ void Gamestate_Draw(struct Game *game, struct MenuResources* data) {
 	al_draw_bitmap(data->cable,0,151,0);
 
 	DrawCharacter(game, data->ego, al_map_rgb(255,255,255), 0);
+	DrawCharacter(game, data->stickman, al_map_rgb(255,255,255), 0);
 
-	DrawTextWithShadow(data->font_title, al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.15, ALLEGRO_ALIGN_CENTRE, "Radio Edit");
-
-	DrawMenuState(game, data);
+	if (data->menustate != MENUSTATE_HIDDEN) {
+		DrawTextWithShadow(data->font_title, al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.15, ALLEGRO_ALIGN_CENTRE, "Radio Edit");
+		DrawMenuState(game, data);
+	}
 }
 
 void Gamestate_Logic(struct Game *game, struct MenuResources* data) {
@@ -110,6 +114,10 @@ void Gamestate_Logic(struct Game *game, struct MenuResources* data) {
 	if (data->cloud_position<-40) { data->cloud_position=100; PrintConsole(game, "cloud_position"); }
 	AnimateCharacter(game, data->ego, 1);
 	AnimateCharacter(game, data->cow, 1);
+	AnimateCharacter(game, data->stickman, 1);
+	if (data->menustate == MENUSTATE_HIDDEN) {
+		MoveCharacter(game, data->stickman, -0.2, 0, 0);
+	}
 	TM_Process(data->timeline);
 }
 
@@ -168,13 +176,8 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 
 	data->font_title = al_load_ttf_font(GetDataFilePath(game, "fonts/MonkeyIsland.ttf"),game->viewport.height*0.16,0 );
 	(*progress)(game);
-	data->font_subtitle = al_load_ttf_font(GetDataFilePath(game, "fonts/MonkeyIsland.ttf"),game->viewport.height*0.08,0 );
-	(*progress)(game);
 	data->font = al_load_ttf_font(GetDataFilePath(game, "fonts/MonkeyIsland.ttf"),game->viewport.height*0.05,0 );
 	(*progress)(game);
-	data->font_selected = al_load_ttf_font(GetDataFilePath(game, "fonts/MonkeyIsland.ttf"),game->viewport.height*0.1,0 );
-	(*progress)(game);
-
 
 	if (!data->click_sample){
 		fprintf(stderr, "Audio clip sample#3 not loaded!\n" );
@@ -186,6 +189,7 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	RegisterSpritesheet(game, data->ego, "fix");
 	RegisterSpritesheet(game, data->ego, "fix2");
 	RegisterSpritesheet(game, data->ego, "fix3");
+	RegisterSpritesheet(game, data->ego, "play");
 	LoadSpritesheets(game, data->ego);
 
 	(*progress)(game);
@@ -195,6 +199,11 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	RegisterSpritesheet(game, data->cow, "chew");
 	RegisterSpritesheet(game, data->cow, "look");
 	LoadSpritesheets(game, data->cow);
+
+	data->stickman = CreateCharacter(game, "stickman");
+	RegisterSpritesheet(game, data->stickman, "walk");
+	LoadSpritesheets(game, data->stickman);
+
 
 	(*progress)(game);
 
@@ -222,9 +231,7 @@ void Gamestate_Unload(struct Game *game, struct MenuResources* data) {
 	al_destroy_bitmap(data->lines);
 	al_destroy_bitmap(data->cable);
 	al_destroy_font(data->font_title);
-	al_destroy_font(data->font_subtitle);
 	al_destroy_font(data->font);
-	al_destroy_font(data->font_selected);
 	al_destroy_sample_instance(data->music);
 	al_destroy_sample_instance(data->click);
 	al_destroy_sample(data->sample);
@@ -258,6 +265,9 @@ void Gamestate_Start(struct Game *game, struct MenuResources* data) {
 	data->cloud_position = 100;
 	SetCharacterPosition(game, data->ego, 22, 107, 0);
 	SetCharacterPosition(game, data->cow, 35, 88, 0);
+	SetCharacterPosition(game, data->stickman, 320, 132, 0);
+
+	SelectSpritesheet(game, data->stickman, "walk");
 	SelectSpritesheet(game, data->ego, "stand");
 	SelectSpritesheet(game, data->cow, "chew");
 	ChangeMenuState(game,data,MENUSTATE_MAIN);
@@ -269,6 +279,13 @@ void Gamestate_Start(struct Game *game, struct MenuResources* data) {
 
 void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEGRO_EVENT *ev) {
 	TM_HandleEvent(data->timeline, ev);
+
+	if (data->menustate == MENUSTATE_HIDDEN) {
+		if (ev->keyboard.keycode==ALLEGRO_KEY_ESCAPE) {
+			ChangeMenuState(game,data,MENUSTATE_MAIN);
+		}
+		return;
+	}
 
 	if (ev->type != ALLEGRO_EVENT_KEY_DOWN) return;
 
@@ -297,11 +314,11 @@ void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEG
 			case MENUSTATE_MAIN:
 				switch (data->selected) {
 					case 0:
-						LoadGamestate(game, "disclaimer");
-						LoadGamestate(game, "intro");
-						LoadGamestate(game, "map");
-						StopGamestate(game, "menu");
-						StartGamestate(game, "disclaimer");
+						TM_CleanQueue(data->timeline);
+						TM_CleanBackgroundQueue(data->timeline);
+						ChangeSpritesheet(game, data->ego, "play");
+						ChangeSpritesheet(game, data->cow, "chew");
+						ChangeMenuState(game,data,MENUSTATE_HIDDEN);
 						break;
 					case 1:
 						ChangeMenuState(game,data,MENUSTATE_OPTIONS);
@@ -427,6 +444,9 @@ void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEG
 	} else if (ev->keyboard.keycode==ALLEGRO_KEY_ESCAPE) {
 		switch (data->menustate) {
 			case MENUSTATE_OPTIONS:
+				ChangeMenuState(game,data,MENUSTATE_MAIN);
+				break;
+			case MENUSTATE_HIDDEN:
 				ChangeMenuState(game,data,MENUSTATE_MAIN);
 				break;
 			case MENUSTATE_VIDEO:

@@ -28,7 +28,9 @@ enum menustate_enum {
 	MENUSTATE_MAIN,
 	MENUSTATE_OPTIONS,
 	MENUSTATE_VIDEO,
-	MENUSTATE_AUDIO
+	MENUSTATE_AUDIO,
+	MENUSTATE_HIDDEN,
+	MENUSTATE_PAUSE
 };
 
 /*! \brief Resources used by Menu state. */
@@ -41,8 +43,12 @@ struct MenuResources {
 		ALLEGRO_BITMAP *speaker;
 		ALLEGRO_BITMAP *lines;
 		ALLEGRO_BITMAP *cable;
+
+		int markx, marky;
+
 		struct Character *ego;
 		struct Character *cow;
+		struct Character *stickman;
 		struct Timeline *timeline;
 		float cloud_position; /*!< Position of bigger cloud. */
 		ALLEGRO_SAMPLE *sample; /*!< Music sample. */
@@ -50,9 +56,7 @@ struct MenuResources {
 		ALLEGRO_SAMPLE_INSTANCE *music; /*!< Sample instance with music sound. */
 		ALLEGRO_SAMPLE_INSTANCE *click; /*!< Sample instance with click sound. */
 		ALLEGRO_FONT *font_title; /*!< Font of "Super Derpy" text. */
-		ALLEGRO_FONT *font_subtitle; /*!< Font of "Muffin Attack" text. */
 		ALLEGRO_FONT *font; /*!< Font of standard menu item. */
-		ALLEGRO_FONT *font_selected; /*!< Font of selected menu item. */
 		int selected; /*!< Number of selected menu item. */
 		enum menustate_enum menustate; /*!< Current menu page. */
 		struct {

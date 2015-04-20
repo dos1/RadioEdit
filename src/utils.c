@@ -407,7 +407,7 @@ void AnimateCharacter(struct Game *game, struct Character *character, float spee
 	}
 }
 
-void MoveCharacter(struct Game *game, struct Character *character, int x, int y, float angle) {
+void MoveCharacter(struct Game *game, struct Character *character, float x, float y, float angle) {
 	character->x += x;
 	character->y += y;
 	character->angle += angle;

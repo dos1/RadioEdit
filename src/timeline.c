@@ -297,8 +297,9 @@ void TM_CleanQueue(struct Timeline* timeline) {
 	while (pom!=NULL) {
 		if (pom->active) {
 			if (*pom->function) (*pom->function)(timeline->game, pom, TM_ACTIONSTATE_DESTROY);
-			else {
-				if (pom->timer) al_destroy_timer(pom->timer);
+			if (pom->timer) {
+				al_stop_timer(pom->timer);
+				al_destroy_timer(pom->timer);
 			}
 		} else {
 			TM_DestroyArgs(pom->arguments);
@@ -311,23 +312,25 @@ void TM_CleanQueue(struct Timeline* timeline) {
 			free(pom->name);
 			free(pom);
 			tmp2 = tmp;
-			if (!tmp) pom=timeline->background->next;
+			if (!tmp) pom=timeline->queue->next;
 			else pom=tmp->next;
 			tmp = tmp2;
 		}
 	}
+	// TODO: it shouldn't be needed, but is. Debug!
+	timeline->queue = NULL;
 }
 
 void TM_CleanBackgroundQueue(struct Timeline* timeline) {
 	PrintConsole(timeline->game, "Timeline Manager[%s]: cleaning background queue", timeline->name);
-	struct TM_Action *tmp, *tmp2, *pom = timeline->queue;
+	struct TM_Action *tmp, *tmp2, *pom = timeline->background;
 	tmp = NULL;
-	pom=timeline->background;
 	while (pom!=NULL) {
 		if (pom->active) {
 			if (*pom->function) (*pom->function)(timeline->game, pom, TM_ACTIONSTATE_DESTROY);
-			else {
-				if (pom->timer) al_destroy_timer(pom->timer);
+			if (pom->timer) {
+				al_stop_timer(pom->timer);
+				al_destroy_timer(pom->timer);
 			}
 		} else {
 			TM_DestroyArgs(pom->arguments);
@@ -345,6 +348,8 @@ void TM_CleanBackgroundQueue(struct Timeline* timeline) {
 			tmp = tmp2;
 		}
 	}
+	// TODO: it shouldn't be needed, but is. Debug!
+	timeline->background = NULL;
 }
 
 void TM_Destroy(struct Timeline* timeline) {

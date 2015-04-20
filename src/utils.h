@@ -87,8 +87,8 @@ struct Character {
 	ALLEGRO_BITMAP* bitmap;
 	int pos; /*!< Current spritesheet position. */
 	int pos_tmp; /*!< A counter used to slow down spritesheet animation. */
-	int x; /*!< Horizontal position of character. */
-	int y; /*!< Vertical position of character. */
+	float x; /*!< Horizontal position of character. */
+	float y; /*!< Vertical position of character. */
 	float angle; /*!< Characters display angle (radians). */
 	void* data; /*!< Additional, custom character data (HP etc.). */
 };
@@ -107,5 +107,5 @@ void LoadSpritesheets(struct Game *game, struct Character *character);
 void UnloadSpritesheets(struct Game *game, struct Character *character);
 
 void AnimateCharacter(struct Game *game, struct Character *character, float speed_modifier);
-void MoveCharacter(struct Game *game, struct Character *character, int x, int y, float angle);
+void MoveCharacter(struct Game *game, struct Character *character, float x, float y, float angle);
 void SetCharacterPosition(struct Game *game, struct Character *character, int x, int y, float angle);
