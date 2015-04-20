@@ -117,6 +117,30 @@ void DrawMenuState(struct Game *game, struct MenuResources *data) {
 	free(text);
 }
 
+void AnimateBadguys(struct Game *game, struct MenuResources *data, int i) {
+	struct Badguy *tmp = data->badguys[i];
+	while (tmp) {
+		AnimateCharacter(game, tmp->character, 1);
+		tmp=tmp->next;
+	}
+}
+
+void MoveBadguys(struct Game *game, struct MenuResources *data, int i, float dx) {
+	struct Badguy *tmp = data->badguys[i];
+	while (tmp) {
+		MoveCharacter(game, tmp->character, dx, 0, 0);
+		tmp=tmp->next;
+	}
+}
+
+void DrawBadguys(struct Game *game, struct MenuResources *data, int i) {
+	struct Badguy *tmp = data->badguys[i];
+	while (tmp) {
+		DrawCharacter(game, tmp->character, al_map_rgb(255,255,255), 0);
+		tmp=tmp->next;
+	}
+}
+
 void Gamestate_Draw(struct Game *game, struct MenuResources* data) {
 
 	al_set_target_bitmap(al_get_backbuffer(game->display));
@@ -165,7 +189,11 @@ void Gamestate_Draw(struct Game *game, struct MenuResources* data) {
 			al_draw_tinted_bitmap(data->light, al_map_rgba(255, 255, 255,rand() % 256 / 50 * 50) , data->lightx - 171 - (data->lighty < 2 ? 1 : 0), 109+(data->lighty*10) - 143 + offset, 0);
 		}
 
-		DrawCharacter(game, data->stickman, al_map_rgb(255,255,255), 0);
+		DrawBadguys(game, data, 0);
+		DrawBadguys(game, data, 1);
+		DrawBadguys(game, data, 2);
+		DrawBadguys(game, data, 3);
+		//DrawCharacter(game, data->stickman, al_map_rgb(255,255,255), 0);
 
 	}
 }
@@ -176,8 +204,19 @@ void Gamestate_Logic(struct Game *game, struct MenuResources* data) {
 	AnimateCharacter(game, data->ego, 1);
 	AnimateCharacter(game, data->cow, 1);
 	AnimateCharacter(game, data->stickman, 1);
+
+	AnimateBadguys(game, data, 0);
+	AnimateBadguys(game, data, 1);
+	AnimateBadguys(game, data, 2);
+	AnimateBadguys(game, data, 3);
+
+
 	if (data->menustate == MENUSTATE_HIDDEN) {
-		MoveCharacter(game, data->stickman, -0.2, 0, 0);
+		//MoveCharacter(game, data->stickman, -0.2, 0, 0);
+		MoveBadguys(game, data, 0, -0.17);
+		MoveBadguys(game, data, 1, -0.18);
+		MoveBadguys(game, data, 2, -0.19);
+		MoveBadguys(game, data, 3, -0.2);
 	}
 	if (data->usage) { data->usage--; }
 	if (data->lightanim) { data->lightanim++;}
@@ -301,7 +340,7 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	RegisterSpritesheet(game, data->cow, "look");
 	LoadSpritesheets(game, data->cow);
 
-	data->stickman = CreateCharacter(game, "stickman");
+	data->stickman = CreateCharacter(game, "badguy");
 	RegisterSpritesheet(game, data->stickman, "walk");
 	LoadSpritesheets(game, data->stickman);
 
@@ -312,8 +351,45 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	return data;
 }
 
+void AddBadguy(struct Game *game, struct MenuResources* data, int i) {
+	struct Badguy *n = malloc(sizeof(struct Badguy));
+	n->next = NULL;
+	n->character = CreateCharacter(game, "badguy");
+	RegisterSpritesheet(game, n->character, "walk");
+	//RegisterSpritesheet(game, n->character, "walk");
+	LoadSpritesheets(game, n->character); // FIXME: damnit, it shouldn't be here, hopefully will be fast enough
+	SelectSpritesheet(game, n->character, "walk");
+	SetCharacterPosition(game, n->character, 320, 108+(i*13), 0);
+
+	if (data->badguys[i]) {
+		struct Badguy *tmp = data->badguys[i];
+		while (tmp->next) {
+			tmp=tmp->next;
+		}
+		tmp->next = n;
+	} else {
+		data->badguys[i] = n;
+	}
+}
+
+void DestroyBadguys(struct Game *game, struct MenuResources* data, int i) {
+	struct Badguy *tmp = data->badguys[i];
+	while (tmp) {
+		DestroyCharacter(game, tmp->character);
+		struct Badguy *old = tmp;
+		tmp = tmp->next;
+		free(old);
+	}
+	data->badguys[i] = NULL;
+}
+
 void Gamestate_Stop(struct Game *game, struct MenuResources* data) {
 	al_stop_sample_instance(data->music);
+
+	int i;
+	for (i=0; i<4; i++) {
+		DestroyBadguys(game, data, i);
+	}
 }
 
 void ChangeMenuState(struct Game *game, struct MenuResources* data, enum menustate_enum state) {
@@ -378,6 +454,19 @@ bool Anim_CowLook(struct Game *game, struct TM_Action *action, enum TM_ActionSta
 		TM_AddQueuedBackgroundAction(data->timeline, &Anim_CowLook, TM_AddToArgs(NULL, 1, data), 54*1000, "cow_look");
 	}
 	return true;
+}
+
+void StartGame(struct Game *game, struct MenuResources *data) {
+	TM_CleanQueue(data->timeline);
+	TM_CleanBackgroundQueue(data->timeline);
+	ChangeSpritesheet(game, data->ego, "play");
+	ChangeSpritesheet(game, data->cow, "chew");
+	ChangeMenuState(game,data,MENUSTATE_HIDDEN);
+	al_play_sample_instance(data->chords[0]);
+	AddBadguy(game, data, 0);
+	AddBadguy(game, data, 1);
+	AddBadguy(game, data, 2);
+	AddBadguy(game, data, 3);
 }
 
 bool Anim_FixGuitar(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
@@ -512,12 +601,7 @@ void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEG
 			case MENUSTATE_MAIN:
 				switch (data->selected) {
 					case 0:
-						TM_CleanQueue(data->timeline);
-						TM_CleanBackgroundQueue(data->timeline);
-						ChangeSpritesheet(game, data->ego, "play");
-						ChangeSpritesheet(game, data->cow, "chew");
-						ChangeMenuState(game,data,MENUSTATE_HIDDEN);
-						al_play_sample_instance(data->chords[0]);
+						StartGame(game, data);
 						break;
 					case 1:
 						ChangeMenuState(game,data,MENUSTATE_OPTIONS);
