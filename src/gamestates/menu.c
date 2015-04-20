@@ -109,6 +109,12 @@ void DrawMenuState(struct Game *game, struct MenuResources *data) {
 			break;
 		case MENUSTATE_HIDDEN:
 			break;
+		case MENUSTATE_LOST:
+			DrawTextWithShadow(font, al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.5, ALLEGRO_ALIGN_CENTRE, "You lost!");
+			sprintf(text, "Score: %d", data->score);
+			DrawTextWithShadow(font, al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.6, ALLEGRO_ALIGN_CENTRE, text);
+			DrawTextWithShadow(font, al_map_rgb(255,255,160), game->viewport.width*0.5, game->viewport.height*0.8, ALLEGRO_ALIGN_CENTRE, "Back to menu");
+			break;
 		default:
 			data->selected=0;
 			DrawTextWithShadow(font, data->selected==0 ? al_map_rgb(255,255,160) : al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.5, ALLEGRO_ALIGN_CENTRE, "Not implemented yet");
@@ -157,6 +163,27 @@ void MoveBadguys(struct Game *game, struct MenuResources *data, int i, float dx)
 	}
 }
 
+void CheckForEnd(struct Game *game, struct MenuResources *data) {
+	int i;
+	bool lost = false;
+	for (i=0; i<4; i++) {
+		struct Badguy *tmp = data->badguys[i];
+		while (tmp) {
+			if (tmp->character->x <= (139-(i*10))) {
+				lost = true;
+				break;
+			}
+			tmp=tmp->next;
+		}
+		if (lost) break;
+	}
+	if (lost) {
+		al_stop_sample_instance(data->music);
+		al_play_sample_instance(data->end);
+		ChangeMenuState(game, data, MENUSTATE_LOST);
+	}
+}
+
 void DrawBadguys(struct Game *game, struct MenuResources *data, int i) {
 	struct Badguy *tmp = data->badguys[i];
 	while (tmp) {
@@ -190,11 +217,7 @@ void Gamestate_Draw(struct Game *game, struct MenuResources* data) {
 
 	DrawCharacter(game, data->ego, al_map_rgb(255,255,255), 0);
 
-	if (data->menustate != MENUSTATE_HIDDEN) {
-		DrawTextWithShadow(data->font_title, al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.15, ALLEGRO_ALIGN_CENTRE, "Radio Edit");
-		DrawMenuState(game, data);
-	} else {
-
+	if (data->menustate == MENUSTATE_HIDDEN) {
 		if (data->marky == 0) {
 			al_draw_bitmap(data->marksmall, data->markx, 128, 0);
 		} else if (data->marky == 1) {
@@ -213,11 +236,16 @@ void Gamestate_Draw(struct Game *game, struct MenuResources* data) {
 			al_draw_tinted_bitmap(data->light, al_map_rgba(255, 255, 255,rand() % 256 / 50 * 50) , data->lightx - 171 - (data->lighty < 2 ? 1 : 0), 109+(data->lighty*10) - 143 + offset, 0);
 		}
 
-		DrawBadguys(game, data, 0);
-		DrawBadguys(game, data, 1);
-		DrawBadguys(game, data, 2);
-		DrawBadguys(game, data, 3);
+	}
 
+	DrawBadguys(game, data, 0);
+	DrawBadguys(game, data, 1);
+	DrawBadguys(game, data, 2);
+	DrawBadguys(game, data, 3);
+
+	if (data->menustate != MENUSTATE_HIDDEN) {
+		DrawTextWithShadow(data->font_title, al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.15, ALLEGRO_ALIGN_CENTRE, data->menustate == MENUSTATE_LOST ? "Radio Edited!" : "Radio Edit");
+		DrawMenuState(game, data);
 	}
 }
 
@@ -252,6 +280,8 @@ void Gamestate_Logic(struct Game *game, struct MenuResources* data) {
 		if (data->usage) { data->usage--; }
 		if (data->lightanim) { data->lightanim++;}
 		if (data->lightanim > 25) { data->lightanim = 0; }
+
+		CheckForEnd(game, data);
 	}
 
 	TM_Process(data->timeline);
@@ -512,8 +542,12 @@ void Gamestate_Start(struct Game *game, struct MenuResources* data) {
 	SetCharacterPosition(game, data->ego, 22, 107, 0);
 	SetCharacterPosition(game, data->cow, 35, 88, 0);
 
+	data->score = 0;
+
 	data->markx = 119;
 	data->marky = 2;
+
+	data->lightanim=0;
 
 	data->usage = 0;
 
@@ -552,6 +586,7 @@ void Fire(struct Game *game, struct MenuResources *data) {
 	while (tmp) {
 		if (!tmp->melting) {
 			if ((data->markx >= tmp->character->x - 9) && (data->markx <= tmp->character->x + 1)) {
+				data->score += 100 * tmp->speed;
 				SelectSpritesheet(game, tmp->character, "melt");
 				tmp->melting = true;
 			}
@@ -763,6 +798,10 @@ void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEG
 				break;
 			case MENUSTATE_ABOUT:
 				break;
+			case MENUSTATE_LOST:
+				Gamestate_Stop(game,data);
+				Gamestate_Start(game,data);
+				break;
 			default:
 				UnloadGamestate(game, "menu");
 				return;
@@ -785,6 +824,10 @@ void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEG
 				break;
 			case MENUSTATE_AUDIO:
 				ChangeMenuState(game,data,MENUSTATE_OPTIONS);
+				break;
+			case MENUSTATE_LOST:
+				Gamestate_Stop(game,data);
+				Gamestate_Start(game,data);
 				break;
 			default:
 				UnloadGamestate(game, "menu");

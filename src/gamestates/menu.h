@@ -30,7 +30,9 @@ enum menustate_enum {
 	MENUSTATE_VIDEO,
 	MENUSTATE_AUDIO,
 	MENUSTATE_HIDDEN,
-	MENUSTATE_ABOUT
+	MENUSTATE_ABOUT,
+	MENUSTATE_LOST
+	// FIXME: menustate abuse eeeeew
 };
 
 /*! \brief Resources used by Menu state. */
@@ -88,6 +90,8 @@ struct MenuResources {
 				int height;
 				int resolution;
 		} options; /*!< Options which can be changed in menu. */
+
+		int score;
 };
 
 // functions from the engine
@@ -96,5 +100,5 @@ void Console_Unload(struct Game *game);
 void Console_Load(struct Game *game);
 void DrawConsole(struct Game *game);
 
-//void DrawMenuState(struct Game *game);
-//void ChangeMenuState(struct Game *game, enum menustate_enum state);
+void AddBadguy(struct Game *game, struct MenuResources* data, int i);
+void ChangeMenuState(struct Game *game, struct MenuResources* data, enum menustate_enum state);
