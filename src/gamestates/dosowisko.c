@@ -167,6 +167,9 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	for (x = 0; x < al_get_bitmap_width(data->checkerboard); x=x+2) {
 		for (y = 0; y < al_get_bitmap_height(data->checkerboard); y=y+2) {
 			al_put_pixel(x, y, al_map_rgba(0,0,0,64));
+			al_put_pixel(x+1, y, al_map_rgba(0,0,0,0));
+			al_put_pixel(x, y+1, al_map_rgba(0,0,0,0));
+			al_put_pixel(x+1, y+1, al_map_rgba(0,0,0,0));
 		}
 	}
 	al_unlock_bitmap(data->checkerboard);
