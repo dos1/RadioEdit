@@ -335,11 +335,16 @@ void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEG
 		}
 
 		if (ev->keyboard.keycode==ALLEGRO_KEY_LEFT) {
+			int min = 139-(data->marky*10);
 			data->markx-=2;
+			if (data->markx < min) data->markx=min;
 		}
 
 		if (ev->keyboard.keycode==ALLEGRO_KEY_RIGHT) {
+			int max = 320 - al_get_bitmap_width(data->markbig);
+			if (data->marky < 2) max = 320 - al_get_bitmap_width(data->marksmall);
 			data->markx+=2;
+			if (data->markx > max) data->markx=max;
 		}
 
 
