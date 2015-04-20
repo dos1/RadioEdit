@@ -49,8 +49,9 @@ struct MenuResources {
 		ALLEGRO_BITMAP *markbig;
 		int markx, marky;
 
-        ALLEGRO_SAMPLE *chord_samples[6];
-        ALLEGRO_SAMPLE_INSTANCE *chords[6];
+        ALLEGRO_SAMPLE *chord_samples[7];
+        ALLEGRO_SAMPLE_INSTANCE *chords[7];
+        // 0-2: low; 3-5: high; 6 - solo
 
         int usage;
         int lightx, lighty, lightanim;

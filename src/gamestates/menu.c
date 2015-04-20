@@ -26,7 +26,7 @@
 #include "../timeline.h"
 #include "menu.h"
 
-int Gamestate_ProgressCount = 25;
+int Gamestate_ProgressCount = 26;
 
 void DrawMenuState(struct Game *game, struct MenuResources *data) {
 	ALLEGRO_FONT *font = data->font;
@@ -208,7 +208,7 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	(*progress)(game);
 
     int i;
-    for (i=0; i<6; i++) {
+    for (i=0; i<7; i++) {
         char name[] = "chords/0.flac";
         name[7] = '1' + i;
         data->chord_samples[i] = al_load_sample( GetDataFilePath(game, name) );
@@ -285,7 +285,7 @@ void Gamestate_Unload(struct Game *game, struct MenuResources* data) {
 	al_destroy_sample(data->sample);
 	al_destroy_sample(data->click_sample);
     int i;
-    for (i=0; i<6; i++) {
+    for (i=0; i<7; i++) {
         al_destroy_sample_instance(data->chords[i]);
         al_destroy_sample(data->chord_samples[i]);
     }
