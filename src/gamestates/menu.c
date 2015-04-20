@@ -21,12 +21,49 @@
 #include <stdio.h>
 #include <math.h>
 #include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_primitives.h>
 #include "../config.h"
 #include "../utils.h"
 #include "../timeline.h"
 #include "menu.h"
 
 int Gamestate_ProgressCount = 26;
+
+void About(struct Game *game, struct MenuResources* data) {
+	ALLEGRO_TRANSFORM trans;
+	al_identity_transform(&trans);
+	al_use_transform(&trans);
+
+	if (!game->_priv.font_bsod) {
+		game->_priv.font_bsod = al_create_builtin_font();
+	}
+
+	al_set_target_backbuffer(game->display);
+	al_clear_to_color(al_map_rgb(0,0,170));
+
+	char *header = "RADIO EDIT";
+
+	al_draw_filled_rectangle(al_get_display_width(game->display)/2 - al_get_text_width(game->_priv.font_bsod, header)/2 - 4, (int)(al_get_display_height(game->display) * 0.32), 4 + al_get_display_width(game->display)/2 + al_get_text_width(game->_priv.font_bsod, header)/2, (int)(al_get_display_height(game->display) * 0.32) + al_get_font_line_height(game->_priv.font_bsod), al_map_rgb(170,170,170));
+
+	al_draw_text(game->_priv.font_bsod, al_map_rgb(0, 0, 170), al_get_display_width(game->display)/2, (int)(al_get_display_height(game->display) * 0.32), ALLEGRO_ALIGN_CENTRE, header);
+
+	char *header2 = "A fatal exception 0xD3RP has occured at 0028:M00F11NZ in GST SD(01) +";
+
+	al_draw_text(game->_priv.font_bsod, al_map_rgb(255,255,255), al_get_display_width(game->display)/2, (int)(al_get_display_height(game->display) * 0.32+2*al_get_font_line_height(game->_priv.font_bsod)*1.25), ALLEGRO_ALIGN_CENTRE, header2);
+	al_draw_textf(game->_priv.font_bsod, al_map_rgb(255,255,255), al_get_display_width(game->display)/2 - al_get_text_width(game->_priv.font_bsod, header2)/2, (int)(al_get_display_height(game->display) * 0.32+3*al_get_font_line_height(game->_priv.font_bsod)*1.25), ALLEGRO_ALIGN_LEFT, "%p and system just doesn't know what went wrong.", game);
+
+	al_draw_text(game->_priv.font_bsod, al_map_rgb(255,255,255), al_get_display_width(game->display)/2, (int)(al_get_display_height(game->display) * 0.32+5*al_get_font_line_height(game->_priv.font_bsod)*1.25), ALLEGRO_ALIGN_CENTRE, 	"About screen not implemented!");
+	al_draw_text(game->_priv.font_bsod, al_map_rgb(255,255,255), al_get_display_width(game->display)/2, (int)(al_get_display_height(game->display) * 0.32+6*al_get_font_line_height(game->_priv.font_bsod)*1.25), ALLEGRO_ALIGN_CENTRE, 	"See http://dosowisko.net/radioedit/");
+	al_draw_text(game->_priv.font_bsod, al_map_rgb(255,255,255), al_get_display_width(game->display)/2, (int)(al_get_display_height(game->display) * 0.32+7*al_get_font_line_height(game->_priv.font_bsod)*1.25), ALLEGRO_ALIGN_CENTRE, 	"Made for Ludum Dare 32");
+
+	al_draw_text(game->_priv.font_bsod, al_map_rgb(255,255,255), al_get_display_width(game->display)/2 - al_get_text_width(game->_priv.font_bsod, header2)/2, (int)(al_get_display_height(game->display) * 0.32+9*al_get_font_line_height(game->_priv.font_bsod)*1.25), ALLEGRO_ALIGN_LEFT, "* Press any key to terminate this error.");
+	al_draw_text(game->_priv.font_bsod, al_map_rgb(255,255,255), al_get_display_width(game->display)/2 - al_get_text_width(game->_priv.font_bsod, header2)/2, (int)(al_get_display_height(game->display) * 0.32+10*al_get_font_line_height(game->_priv.font_bsod)*1.25), ALLEGRO_ALIGN_LEFT, "* Press any key to destroy all muffins in the world.");
+	al_draw_text(game->_priv.font_bsod, al_map_rgb(255,255,255), al_get_display_width(game->display)/2 - al_get_text_width(game->_priv.font_bsod, header2)/2, (int)(al_get_display_height(game->display) * 0.32+11*al_get_font_line_height(game->_priv.font_bsod)*1.25), ALLEGRO_ALIGN_LEFT, "* Just kidding, please press any key anyway.");
+
+	al_draw_text(game->_priv.font_bsod, al_map_rgb(255,255,255), al_get_display_width(game->display)/2, (int)(al_get_display_height(game->display) * 0.32+13*al_get_font_line_height(game->_priv.font_bsod)*1.25), ALLEGRO_ALIGN_CENTRE, "Press any key to continue _");
+
+	al_use_transform(&game->projection);
+}
 
 void DrawMenuState(struct Game *game, struct MenuResources *data) {
 	ALLEGRO_FONT *font = data->font;
@@ -52,6 +89,9 @@ void DrawMenuState(struct Game *game, struct MenuResources *data) {
 			else sprintf(text, "Effects disabled");
 			DrawTextWithShadow(font, data->selected==1 ? al_map_rgb(255,255,160) : al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.6, ALLEGRO_ALIGN_CENTRE, text);
 			DrawTextWithShadow(font, data->selected==3 ? al_map_rgb(255,255,160) : al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.8, ALLEGRO_ALIGN_CENTRE, "Back");
+			break;
+		case MENUSTATE_ABOUT:
+			About(game, data);
 			break;
 		case MENUSTATE_VIDEO:
 			if (data->options.fullscreen) {
@@ -339,6 +379,11 @@ void Gamestate_Start(struct Game *game, struct MenuResources* data) {
 void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEGRO_EVENT *ev) {
 	TM_HandleEvent(data->timeline, ev);
 
+	if ((data->menustate == MENUSTATE_ABOUT) && (ev->type == ALLEGRO_EVENT_KEY_DOWN)) {
+		ChangeMenuState(game, data, MENUSTATE_MAIN);
+		return;
+	}
+
 	if (data->menustate == MENUSTATE_HIDDEN) {
 		if (ev->type != ALLEGRO_EVENT_KEY_CHAR) return;
 
@@ -437,8 +482,7 @@ void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEG
 						ChangeMenuState(game,data,MENUSTATE_OPTIONS);
 						break;
 					case 2:
-						FatalError(game, false, "About screen not implemented! See http://dosowisko.net/radioedit/");
-						al_flush_event_queue(game->_priv.event_queue);
+						ChangeMenuState(game,data,MENUSTATE_ABOUT);
 						break;
 					case 3:
 						UnloadGamestate(game, "menu");
@@ -548,6 +592,8 @@ void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEG
 						break;
 				}
 				break;
+			case MENUSTATE_ABOUT:
+				break;
 			default:
 				UnloadGamestate(game, "menu");
 				return;
@@ -556,6 +602,9 @@ void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEG
 	} else if (ev->keyboard.keycode==ALLEGRO_KEY_ESCAPE) {
 		switch (data->menustate) {
 			case MENUSTATE_OPTIONS:
+				ChangeMenuState(game,data,MENUSTATE_MAIN);
+				break;
+			case MENUSTATE_ABOUT:
 				ChangeMenuState(game,data,MENUSTATE_MAIN);
 				break;
 			case MENUSTATE_HIDDEN:
@@ -578,7 +627,6 @@ void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEG
 	if (data->selected==4) data->selected=0;
 	return;
 }
-
 
 void Gamestate_Pause(struct Game *game, struct MenuResources* data) {}
 void Gamestate_Resume(struct Game *game, struct MenuResources* data) {}

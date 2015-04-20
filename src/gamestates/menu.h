@@ -30,7 +30,7 @@ enum menustate_enum {
 	MENUSTATE_VIDEO,
 	MENUSTATE_AUDIO,
 	MENUSTATE_HIDDEN,
-	MENUSTATE_PAUSE
+	MENUSTATE_ABOUT
 };
 
 /*! \brief Resources used by Menu state. */
