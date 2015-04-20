@@ -126,10 +126,34 @@ void AnimateBadguys(struct Game *game, struct MenuResources *data, int i) {
 }
 
 void MoveBadguys(struct Game *game, struct MenuResources *data, int i, float dx) {
-	struct Badguy *tmp = data->badguys[i];
+	struct Badguy *tmp = data->badguys[i], *prev = NULL;
 	while (tmp) {
-		MoveCharacter(game, tmp->character, dx, 0, 0);
-		tmp=tmp->next;
+		struct Badguy *old = NULL;
+
+		if ((!tmp->character->successor) || (strcmp(tmp->character->successor, "blank") != 0)) {
+			MoveCharacter(game, tmp->character, dx * tmp->speed, 0, 0);
+		}
+
+		if ((tmp->character->successor) && (strcmp(tmp->character->successor, "blankloop") == 0)) {
+			old=tmp;
+		}
+
+		if (old) {
+			DestroyCharacter(game, old->character);
+			tmp=tmp->next;
+			free(old);
+			if (prev) {
+				prev->next = tmp;
+				prev = tmp;
+			} else {
+				data->badguys[i] = tmp;
+				prev = NULL;
+			}
+		} else {
+			prev = tmp;
+			tmp = tmp->next;
+		}
+
 	}
 }
 
@@ -193,7 +217,6 @@ void Gamestate_Draw(struct Game *game, struct MenuResources* data) {
 		DrawBadguys(game, data, 1);
 		DrawBadguys(game, data, 2);
 		DrawBadguys(game, data, 3);
-		//DrawCharacter(game, data->stickman, al_map_rgb(255,255,255), 0);
 
 	}
 }
@@ -203,7 +226,6 @@ void Gamestate_Logic(struct Game *game, struct MenuResources* data) {
 	if (data->cloud_position<-40) { data->cloud_position=100; PrintConsole(game, "cloud_position"); }
 	AnimateCharacter(game, data->ego, 1);
 	AnimateCharacter(game, data->cow, 1);
-	AnimateCharacter(game, data->stickman, 1);
 
 	AnimateBadguys(game, data, 0);
 	AnimateBadguys(game, data, 1);
@@ -212,15 +234,26 @@ void Gamestate_Logic(struct Game *game, struct MenuResources* data) {
 
 
 	if (data->menustate == MENUSTATE_HIDDEN) {
-		//MoveCharacter(game, data->stickman, -0.2, 0, 0);
 		MoveBadguys(game, data, 0, -0.17);
 		MoveBadguys(game, data, 1, -0.18);
 		MoveBadguys(game, data, 2, -0.19);
 		MoveBadguys(game, data, 3, -0.2);
+
+		data->timeTillNextBadguy--;
+		if (data->timeTillNextBadguy <= 0) {
+			data->timeTillNextBadguy = data->badguyRate;
+			data->badguyRate -= data->badguyRate * 0.02;
+			if (data->badguyRate < 20) {
+				data->badguyRate = 20;
+			}
+			AddBadguy(game, data, rand() % 4);
+		}
+
+		if (data->usage) { data->usage--; }
+		if (data->lightanim) { data->lightanim++;}
+		if (data->lightanim > 25) { data->lightanim = 0; }
 	}
-	if (data->usage) { data->usage--; }
-	if (data->lightanim) { data->lightanim++;}
-	if (data->lightanim > 25) { data->lightanim = 0; }
+
 	TM_Process(data->timeline);
 }
 
@@ -340,11 +373,6 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	RegisterSpritesheet(game, data->cow, "look");
 	LoadSpritesheets(game, data->cow);
 
-	data->stickman = CreateCharacter(game, "badguy");
-	RegisterSpritesheet(game, data->stickman, "walk");
-	LoadSpritesheets(game, data->stickman);
-
-
 	(*progress)(game);
 
 	al_set_target_backbuffer(game->display);
@@ -354,8 +382,13 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 void AddBadguy(struct Game *game, struct MenuResources* data, int i) {
 	struct Badguy *n = malloc(sizeof(struct Badguy));
 	n->next = NULL;
+	n->speed = (rand() % 3) * 0.25 + 1;
+	n->melting = false;
 	n->character = CreateCharacter(game, "badguy");
 	RegisterSpritesheet(game, n->character, "walk");
+	RegisterSpritesheet(game, n->character, "melt");
+	RegisterSpritesheet(game, n->character, "blank");
+	RegisterSpritesheet(game, n->character, "blankloop");
 	//RegisterSpritesheet(game, n->character, "walk");
 	LoadSpritesheets(game, n->character); // FIXME: damnit, it shouldn't be here, hopefully will be fast enough
 	SelectSpritesheet(game, n->character, "walk");
@@ -442,7 +475,6 @@ void Gamestate_Unload(struct Game *game, struct MenuResources* data) {
 	}
 	DestroyCharacter(game, data->ego);
 	DestroyCharacter(game, data->cow);
-	DestroyCharacter(game, data->stickman);
 	TM_Destroy(data->timeline);
 }
 
@@ -463,10 +495,6 @@ void StartGame(struct Game *game, struct MenuResources *data) {
 	ChangeSpritesheet(game, data->cow, "chew");
 	ChangeMenuState(game,data,MENUSTATE_HIDDEN);
 	al_play_sample_instance(data->chords[0]);
-	AddBadguy(game, data, 0);
-	AddBadguy(game, data, 1);
-	AddBadguy(game, data, 2);
-	AddBadguy(game, data, 3);
 }
 
 bool Anim_FixGuitar(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
@@ -483,14 +511,12 @@ void Gamestate_Start(struct Game *game, struct MenuResources* data) {
 	data->cloud_position = 100;
 	SetCharacterPosition(game, data->ego, 22, 107, 0);
 	SetCharacterPosition(game, data->cow, 35, 88, 0);
-	SetCharacterPosition(game, data->stickman, 320, 132, 0);
 
 	data->markx = 119;
 	data->marky = 2;
 
 	data->usage = 0;
 
-	SelectSpritesheet(game, data->stickman, "walk");
 	SelectSpritesheet(game, data->ego, "stand");
 	SelectSpritesheet(game, data->cow, "chew");
 	ChangeMenuState(game,data,MENUSTATE_MAIN);
@@ -503,6 +529,35 @@ void Gamestate_Start(struct Game *game, struct MenuResources* data) {
 	data->badguys[1] = NULL;
 	data->badguys[2] = NULL;
 	data->badguys[3] = NULL;
+
+	data->badguyRate = 100;
+	data->timeTillNextBadguy = 0;
+}
+
+void Fire(struct Game *game, struct MenuResources *data) {
+	data->lightx = data->markx;
+	data->lighty = data->marky;
+	data->lightanim=1;
+	data->usage=30;
+
+	int num = rand() % 3;
+	if (((al_get_sample_instance_position(data->music) + 20000) / 44118) % 2 == 1) {
+		num += 3;
+	}
+	al_stop_sample_instance(data->chords[num]);
+	al_play_sample_instance(data->chords[num]);
+	PrintConsole(game, "playing chord nr %d", num);
+
+	struct Badguy *tmp = data->badguys[data->marky];
+	while (tmp) {
+		if (!tmp->melting) {
+			if ((data->markx >= tmp->character->x - 9) && (data->markx <= tmp->character->x + 1)) {
+				SelectSpritesheet(game, tmp->character, "melt");
+				tmp->melting = true;
+			}
+		}
+		tmp=tmp->next;
+	}
 }
 
 void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEGRO_EVENT *ev) {
@@ -557,18 +612,7 @@ void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEG
 		}
 
 		if ((ev->keyboard.keycode==ALLEGRO_KEY_SPACE) && (data->usage==0)) {
-			data->lightx = data->markx;
-			data->lighty = data->marky;
-			data->lightanim=1;
-			data->usage=30;
-
-			int num = rand() % 3;
-			if (((al_get_sample_instance_position(data->music) + 20000) / 44118) % 2 == 1) {
-				num += 3;
-			}
-			al_stop_sample_instance(data->chords[num]);
-			al_play_sample_instance(data->chords[num]);
-			PrintConsole(game, "playing chord nr %d", num);
+			Fire(game, data);
 		}
 
 		return;

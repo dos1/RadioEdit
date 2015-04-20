@@ -59,11 +59,14 @@ struct MenuResources {
 		struct Badguy {
 				struct Character *character;
 				struct Badguy *next;
+				float speed;
+				bool melting;
 		} *badguys[4];
+
+		int timeTillNextBadguy, badguyRate;
 
 		struct Character *ego;
 		struct Character *cow;
-		struct Character *stickman;
 		struct Timeline *timeline;
 		float cloud_position; /*!< Position of bigger cloud. */
 		ALLEGRO_SAMPLE *sample; /*!< Music sample. */
