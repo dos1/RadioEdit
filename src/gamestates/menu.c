@@ -187,6 +187,7 @@ void CheckForEnd(struct Game *game, struct MenuResources *data) {
 	if (lost) {
 		al_stop_sample_instance(data->music);
 		al_play_sample_instance(data->end);
+		SelectSpritesheet(game, data->ego, "cry");
 		ChangeMenuState(game, data, MENUSTATE_LOST);
 	}
 }
@@ -405,6 +406,7 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	RegisterSpritesheet(game, data->ego, "fix2");
 	RegisterSpritesheet(game, data->ego, "fix3");
 	RegisterSpritesheet(game, data->ego, "play");
+	RegisterSpritesheet(game, data->ego, "cry");
 	LoadSpritesheets(game, data->ego);
 
 	(*progress)(game);
