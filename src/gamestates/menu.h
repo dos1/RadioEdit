@@ -54,12 +54,15 @@ struct MenuResources {
 
 		float badguySpeed;
 
-		ALLEGRO_SAMPLE *chord_samples[7];
-		ALLEGRO_SAMPLE_INSTANCE *chords[7];
-		// 0-2: low; 3-5: high; 6 - solo
+		ALLEGRO_SAMPLE *chord_samples[6];
+		ALLEGRO_SAMPLE_INSTANCE *chords[6];
+		// 0-2: low; 3-5: high
 
 		int usage;
 		int lightx, lighty, lightanim;
+
+		int soloready, soloanim, soloflash;
+		bool soloactive;
 
 		struct Badguy {
 				struct Character *character;
@@ -78,9 +81,11 @@ struct MenuResources {
 		ALLEGRO_SAMPLE *click_sample; /*!< Click sound sample. */
 		ALLEGRO_SAMPLE *quit_sample;
 		ALLEGRO_SAMPLE *end_sample;
+		ALLEGRO_SAMPLE *solo_sample;
 		ALLEGRO_SAMPLE_INSTANCE *music; /*!< Sample instance with music sound. */
 		ALLEGRO_SAMPLE_INSTANCE *click; /*!< Sample instance with click sound. */
 		ALLEGRO_SAMPLE_INSTANCE *quit;
+		ALLEGRO_SAMPLE_INSTANCE *solo;
 		ALLEGRO_SAMPLE_INSTANCE *end;
 		ALLEGRO_FONT *font_title; /*!< Font of "Super Derpy" text. */
 		ALLEGRO_FONT *font; /*!< Font of standard menu item. */

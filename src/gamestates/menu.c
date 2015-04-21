@@ -27,7 +27,9 @@
 #include "../timeline.h"
 #include "menu.h"
 
-int Gamestate_ProgressCount = 30;
+#define SOLO_MIN 20
+
+int Gamestate_ProgressCount = 32;
 
 void About(struct Game *game, struct MenuResources* data) {
 	ALLEGRO_TRANSFORM trans;
@@ -143,7 +145,7 @@ void MoveBadguys(struct Game *game, struct MenuResources *data, int i, float dx)
 	while (tmp) {
 		struct Badguy *old = NULL;
 
-		if ((!tmp->character->successor) || (strcmp(tmp->character->successor, "blank") != 0)) {
+		if (!tmp->character->successor) {
 			MoveCharacter(game, tmp->character, dx * tmp->speed * data->badguySpeed, 0, 0);
 		}
 
@@ -185,6 +187,13 @@ void CheckForEnd(struct Game *game, struct MenuResources *data) {
 		if (lost) break;
 	}
 	if (lost) {
+
+		al_stop_sample_instance(data->solo);
+		data->soloactive=false;
+		data->soloanim=0;
+		data->soloflash=0;
+		data->soloready=0;
+
 		al_stop_sample_instance(data->music);
 		al_play_sample_instance(data->end);
 		SelectSpritesheet(game, data->ego, "cry");
@@ -211,6 +220,7 @@ void Gamestate_Draw(struct Game *game, struct MenuResources* data) {
 	al_draw_bitmap(data->cloud,game->viewport.width*data->cloud_position/100, 10 ,0);
 
 	al_draw_bitmap(data->forest,0, 0,0);
+
 	al_draw_bitmap(data->grass,0, 0,0);
 
 	DrawCharacter(game, data->cow, al_map_rgb(255,255,255), 0);
@@ -226,14 +236,17 @@ void Gamestate_Draw(struct Game *game, struct MenuResources* data) {
 	DrawCharacter(game, data->ego, al_map_rgb(255,255,255), 0);
 
 	if (data->menustate == MENUSTATE_HIDDEN) {
-		if (data->marky == 0) {
-			al_draw_bitmap(data->marksmall, data->markx, 128, 0);
-		} else if (data->marky == 1) {
-			al_draw_bitmap(data->marksmall, data->markx, 140, 0);
-		} else if (data->marky == 2) {
-			al_draw_bitmap(data->markbig, data->markx, 152, 0);
-		} else if (data->marky == 3) {
-			al_draw_bitmap(data->markbig, data->markx, 166, 0);
+
+		if (!data->soloactive) {
+			if (data->marky == 0) {
+				al_draw_bitmap(data->marksmall, data->markx, 128, 0);
+			} else if (data->marky == 1) {
+				al_draw_bitmap(data->marksmall, data->markx, 140, 0);
+			} else if (data->marky == 2) {
+				al_draw_bitmap(data->markbig, data->markx, 152, 0);
+			} else if (data->marky == 3) {
+				al_draw_bitmap(data->markbig, data->markx, 166, 0);
+			}
 		}
 
 		if (data->lightanim) {
@@ -258,6 +271,14 @@ void Gamestate_Draw(struct Game *game, struct MenuResources* data) {
 		char score[255];
 		snprintf(score, 255, "Score: %d", data->score);
 		DrawTextWithShadow(data->font, al_map_rgb(255,255,255), 2, game->viewport.height - 10, ALLEGRO_ALIGN_LEFT, score);
+
+		if ((data->soloready >= SOLO_MIN) && (data->soloanim <= 30)) {
+			DrawTextWithShadow(data->font, al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.15, ALLEGRO_ALIGN_CENTRE, "Press ENTER to play solo!");
+		}
+	}
+
+	if (data->soloflash) {
+		al_draw_filled_rectangle(0, 0, 320, 180, al_map_rgb(255,255,255));
 	}
 }
 
@@ -297,6 +318,34 @@ void Gamestate_Logic(struct Game *game, struct MenuResources* data) {
 		CheckForEnd(game, data);
 	}
 
+	data->soloanim++;
+	if (data->soloanim >= 60) data->soloanim=0;
+
+	if (data->soloactive) {
+		if (al_get_sample_instance_position(data->solo) >= 163840) {
+			PrintConsole(game, "BLAAAST");
+			data->soloflash = 6;
+			data->soloactive=false;
+			data->badguySpeed+=0.5;
+
+			int i;
+			for (i=0; i<4; i++) {
+				struct Badguy *tmp = data->badguys[i];
+				while (tmp) {
+					if (!tmp->melting) {
+						data->score += 100 * tmp->speed;
+						SelectSpritesheet(game, tmp->character, "melt");
+						tmp->melting = true;
+					}
+					tmp=tmp->next;
+				}
+			}
+
+		}
+	}
+
+	if (data->soloflash) data->soloflash--;
+
 	TM_Process(data->timeline);
 }
 
@@ -305,6 +354,7 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	struct MenuResources *data = malloc(sizeof(struct MenuResources));
 
 	data->timeline = TM_Init(game, "main");
+	(*progress)(game);
 
 	data->options.fullscreen = game->config.fullscreen;
 	data->options.fps = game->config.fps;
@@ -358,6 +408,9 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	data->end_sample = al_load_sample( GetDataFilePath(game, "end.flac") );
 	(*progress)(game);
 
+	data->solo_sample = al_load_sample( GetDataFilePath(game, "solo.flac") );
+	(*progress)(game);
+
 	data->music = al_create_sample_instance(data->sample);
 	al_attach_sample_instance_to_mixer(data->music, game->audio.music);
 	al_set_sample_instance_playmode(data->music, ALLEGRO_PLAYMODE_LOOP);
@@ -373,13 +426,18 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	al_set_sample_instance_playmode(data->quit, ALLEGRO_PLAYMODE_ONCE);
 	(*progress)(game);
 
+	data->solo = al_create_sample_instance(data->solo_sample);
+	al_attach_sample_instance_to_mixer(data->solo, game->audio.fx);
+	al_set_sample_instance_playmode(data->solo, ALLEGRO_PLAYMODE_ONCE);
+	(*progress)(game);
+
 	data->end = al_create_sample_instance(data->end_sample);
 	al_attach_sample_instance_to_mixer(data->end, game->audio.fx);
 	al_set_sample_instance_playmode(data->end, ALLEGRO_PLAYMODE_ONCE);
 	(*progress)(game);
 
 	int i;
-	for (i=0; i<7; i++) {
+	for (i=0; i<6; i++) {
 		char name[] = "chords/0.flac";
 		name[7] = '1' + i;
 		data->chord_samples[i] = al_load_sample( GetDataFilePath(game, name) );
@@ -508,12 +566,14 @@ void Gamestate_Unload(struct Game *game, struct MenuResources* data) {
 	al_destroy_sample_instance(data->click);
 	al_destroy_sample_instance(data->end);
 	al_destroy_sample_instance(data->quit);
+	al_destroy_sample_instance(data->solo);
 	al_destroy_sample(data->sample);
 	al_destroy_sample(data->click_sample);
 	al_destroy_sample(data->quit_sample);
 	al_destroy_sample(data->end_sample);
+	al_destroy_sample(data->solo_sample);
 	int i;
-	for (i=0; i<7; i++) {
+	for (i=0; i<6; i++) {
 		al_destroy_sample_instance(data->chords[i]);
 		al_destroy_sample(data->chord_samples[i]);
 	}
@@ -561,6 +621,11 @@ void Gamestate_Start(struct Game *game, struct MenuResources* data) {
 	data->markx = 119;
 	data->marky = 2;
 
+	data->soloactive = false;
+	data->soloanim = 0;
+	data->soloflash = 0;
+	data->soloready = 0;
+
 	data->lightanim=0;
 
 	data->badguySpeed = 1.2;
@@ -585,6 +650,9 @@ void Gamestate_Start(struct Game *game, struct MenuResources* data) {
 }
 
 void Fire(struct Game *game, struct MenuResources *data) {
+
+	if (data->soloactive) return;
+
 	data->lightx = data->markx;
 	data->lighty = data->marky;
 	data->lightanim=1;
@@ -604,6 +672,7 @@ void Fire(struct Game *game, struct MenuResources *data) {
 			if ((data->markx >= tmp->character->x - 9) && (data->markx <= tmp->character->x + 1)) {
 				data->score += 100 * tmp->speed;
 				SelectSpritesheet(game, tmp->character, "melt");
+				data->soloready++;
 				tmp->melting = true;
 			}
 		}
@@ -664,6 +733,15 @@ void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEG
 
 		if ((ev->keyboard.keycode==ALLEGRO_KEY_SPACE) && (data->usage==0)) {
 			Fire(game, data);
+		}
+
+		if (ev->keyboard.keycode==ALLEGRO_KEY_ENTER) {
+			if ((!data->soloactive) && (data->soloready >= SOLO_MIN)) {
+				data->soloready = 0;
+				al_play_sample_instance(data->solo);
+				data->soloactive = true;
+				data->badguySpeed-=0.5;
+			}
 		}
 
 		return;
