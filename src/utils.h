@@ -91,6 +91,7 @@ struct Character {
 		float y; /*!< Vertical position of character. */
 		float angle; /*!< Characters display angle (radians). */
 		void* data; /*!< Additional, custom character data (HP etc.). */
+		bool shared;
 };
 
 

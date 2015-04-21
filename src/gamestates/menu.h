@@ -66,7 +66,7 @@ struct MenuResources {
 
 		struct Badguy {
 				struct Character *character;
-				struct Badguy *next;
+				struct Badguy *next, *prev;
 				float speed;
 				bool melting;
 		} *badguys[4];
@@ -75,6 +75,7 @@ struct MenuResources {
 
 		struct Character *ego;
 		struct Character *cow;
+		struct Character *badguy;
 		struct Timeline *timeline;
 		float cloud_position; /*!< Position of bigger cloud. */
 		ALLEGRO_SAMPLE *sample; /*!< Music sample. */

@@ -62,9 +62,9 @@ void ScaleBitmap(ALLEGRO_BITMAP* source, int width, int height) {
 
 	ALLEGRO_COLOR interpolate(ALLEGRO_COLOR c1, ALLEGRO_COLOR c2, float frac) {
 		return al_map_rgba_f(c1.r + frac * (c2.r - c1.r),
-												 c1.g + frac * (c2.g - c1.g),
-												 c1.b + frac * (c2.b - c1.b),
-												 c1.a + frac * (c2.a - c1.a));
+							 c1.g + frac * (c2.g - c1.g),
+							 c1.b + frac * (c2.b - c1.b),
+							 c1.a + frac * (c2.a - c1.a));
 	}
 
 	for (y = 0; y < height; y++) {
@@ -372,18 +372,21 @@ struct Character* CreateCharacter(struct Game *game, char* name) {
 	character->spritesheets = NULL;
 	character->spritesheet = NULL;
 	character->successor = NULL;
+	character->shared = false;
 	return character;
 }
 
 void DestroyCharacter(struct Game *game, struct Character *character) {
 	PrintConsole(game, "Destroying character %s...", character->name);
-	UnloadSpritesheets(game, character);
-	struct Spritesheet *tmp, *s = character->spritesheets;
-	tmp = s;
-	while (s) {
+	if (!character->shared) {
+		UnloadSpritesheets(game, character);
+		struct Spritesheet *tmp, *s = character->spritesheets;
 		tmp = s;
-		s = s->next;
-		free(tmp);
+		while (s) {
+			tmp = s;
+			s = s->next;
+			free(tmp);
+		}
 	}
 
 	if (character->bitmap) al_destroy_bitmap(character->bitmap);
@@ -419,7 +422,6 @@ void SetCharacterPosition(struct Game *game, struct Character *character, int x,
 	character->angle = angle;
 }
 
-
 void DrawCharacter(struct Game *game, struct Character *character, ALLEGRO_COLOR tilt, int flags) {
 	al_set_target_bitmap(character->bitmap);
 	al_clear_to_color(al_map_rgba(0,0,0,0));
@@ -427,5 +429,4 @@ void DrawCharacter(struct Game *game, struct Character *character, ALLEGRO_COLOR
 	al_set_target_bitmap(al_get_backbuffer(game->display));
 
 	al_draw_tinted_rotated_bitmap(character->bitmap, tilt, al_get_bitmap_width(character->bitmap), al_get_bitmap_height(character->bitmap)/2, character->x + al_get_bitmap_width(character->bitmap), character->y + al_get_bitmap_height(character->bitmap)/2, character->angle, flags);
-
 }
