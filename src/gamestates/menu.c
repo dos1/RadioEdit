@@ -267,13 +267,13 @@ void Gamestate_Logic(struct Game *game, struct MenuResources* data) {
 	AnimateCharacter(game, data->ego, 1);
 	AnimateCharacter(game, data->cow, 1);
 
-	AnimateBadguys(game, data, 0);
-	AnimateBadguys(game, data, 1);
-	AnimateBadguys(game, data, 2);
-	AnimateBadguys(game, data, 3);
-
-
 	if (data->menustate == MENUSTATE_HIDDEN) {
+
+		AnimateBadguys(game, data, 0);
+		AnimateBadguys(game, data, 1);
+		AnimateBadguys(game, data, 2);
+		AnimateBadguys(game, data, 3);
+
 		MoveBadguys(game, data, 0, -0.17);
 		MoveBadguys(game, data, 1, -0.18);
 		MoveBadguys(game, data, 2, -0.19);
