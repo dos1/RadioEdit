@@ -154,9 +154,9 @@ void MoveBadguys(struct Game *game, struct MenuResources *data, int i, float dx)
 		}
 
 		if (old) {
-			DestroyCharacter(game, old->character);
+			//DestroyCharacter(game, old->character);
 			tmp=tmp->next;
-			free(old);
+			//free(old); // FIXME: leak memory for now to avoid crash xDDD
 			if (prev) {
 				prev->next = tmp;
 				prev = tmp;
@@ -327,6 +327,7 @@ void Gamestate_Logic(struct Game *game, struct MenuResources* data) {
 			data->soloflash = 6;
 			data->soloactive=false;
 			data->badguySpeed+=0.5;
+			data->badguyRate += 20;
 
 			int i;
 			for (i=0; i<4; i++) {
