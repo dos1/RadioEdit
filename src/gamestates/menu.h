@@ -31,7 +31,8 @@ enum menustate_enum {
 	MENUSTATE_AUDIO,
 	MENUSTATE_HIDDEN,
 	MENUSTATE_ABOUT,
-	MENUSTATE_LOST
+	MENUSTATE_LOST,
+	MENUSTATE_INTRO,
 	// FIXME: menustate abuse eeeeew
 };
 

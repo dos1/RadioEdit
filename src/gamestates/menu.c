@@ -115,6 +115,13 @@ void DrawMenuState(struct Game *game, struct MenuResources *data) {
 			DrawTextWithShadow(font, al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.6, ALLEGRO_ALIGN_CENTRE, text);
 			DrawTextWithShadow(font, al_map_rgb(255,255,160), game->viewport.width*0.5, game->viewport.height*0.8, ALLEGRO_ALIGN_CENTRE, "Back to menu");
 			break;
+		case MENUSTATE_INTRO:
+			DrawTextWithShadow(font, al_map_rgb(255,255,160), game->viewport.width*0.5, game->viewport.height*0.5, ALLEGRO_ALIGN_CENTRE, "Evil record label representatives want");
+			DrawTextWithShadow(font, al_map_rgb(255,255,160), game->viewport.width*0.5, game->viewport.height*0.55, ALLEGRO_ALIGN_CENTRE, "to turn your awesome single into radio edit.");
+			DrawTextWithShadow(font, al_map_rgb(255,255,160), game->viewport.width*0.5, game->viewport.height*0.6, ALLEGRO_ALIGN_CENTRE, "Thankfully, with your facemelting guitar");
+			DrawTextWithShadow(font, al_map_rgb(255,255,160), game->viewport.width*0.5, game->viewport.height*0.65, ALLEGRO_ALIGN_CENTRE, "skills you don't have to give up easily!");
+			DrawTextWithShadow(font, al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.8, ALLEGRO_ALIGN_CENTRE, "Press ENTER to continue...");
+			break;
 		default:
 			data->selected=0;
 			DrawTextWithShadow(font, data->selected==0 ? al_map_rgb(255,255,160) : al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.5, ALLEGRO_ALIGN_CENTRE, "Not implemented yet");
@@ -683,7 +690,7 @@ void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEG
 			case MENUSTATE_MAIN:
 				switch (data->selected) {
 					case 0:
-						StartGame(game, data);
+						ChangeMenuState(game,data,MENUSTATE_INTRO);
 						break;
 					case 1:
 						ChangeMenuState(game,data,MENUSTATE_OPTIONS);
@@ -801,6 +808,9 @@ void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEG
 				break;
 			case MENUSTATE_ABOUT:
 				break;
+			case MENUSTATE_INTRO:
+				StartGame(game, data);
+				break;
 			case MENUSTATE_LOST:
 				Gamestate_Stop(game,data);
 				Gamestate_Start(game,data);
@@ -827,6 +837,9 @@ void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEG
 				break;
 			case MENUSTATE_AUDIO:
 				ChangeMenuState(game,data,MENUSTATE_OPTIONS);
+				break;
+			case MENUSTATE_INTRO:
+				ChangeMenuState(game,data,MENUSTATE_MAIN);
 				break;
 			case MENUSTATE_LOST:
 				Gamestate_Stop(game,data);
