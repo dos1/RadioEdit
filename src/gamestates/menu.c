@@ -133,7 +133,7 @@ void DrawMenuState(struct Game *game, struct MenuResources *data) {
 void AnimateBadguys(struct Game *game, struct MenuResources *data, int i) {
 	struct Badguy *tmp = data->badguys[i];
 	while (tmp) {
-		AnimateCharacter(game, tmp->character, 1);
+		AnimateCharacter(game, tmp->character, tmp->melting ? 1 : tmp->speed * data->badguySpeed);
 		tmp=tmp->next;
 	}
 }
@@ -144,7 +144,7 @@ void MoveBadguys(struct Game *game, struct MenuResources *data, int i, float dx)
 		struct Badguy *old = NULL;
 
 		if ((!tmp->character->successor) || (strcmp(tmp->character->successor, "blank") != 0)) {
-			MoveCharacter(game, tmp->character, dx * tmp->speed, 0, 0);
+			MoveCharacter(game, tmp->character, dx * tmp->speed * data->badguySpeed, 0, 0);
 		}
 
 		if ((tmp->character->successor) && (strcmp(tmp->character->successor, "blankloop") == 0)) {
@@ -253,6 +253,10 @@ void Gamestate_Draw(struct Game *game, struct MenuResources* data) {
 	if (data->menustate != MENUSTATE_HIDDEN) {
 		DrawTextWithShadow(data->font_title, al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.15, ALLEGRO_ALIGN_CENTRE, data->menustate == MENUSTATE_LOST ? "Radio Edited!" : "Radio Edit");
 		DrawMenuState(game, data);
+	} else {
+		char score[255];
+		snprintf(score, 255, "Score: %d", data->score);
+		DrawTextWithShadow(data->font, al_map_rgb(255,255,255), 2, game->viewport.height - 10, ALLEGRO_ALIGN_LEFT, score);
 	}
 }
 
@@ -281,7 +285,7 @@ void Gamestate_Logic(struct Game *game, struct MenuResources* data) {
 			if (data->badguyRate < 20) {
 				data->badguyRate = 20;
 			}
-			data->badguySpeed+= 0.005;
+			data->badguySpeed+= 0.001;
 			AddBadguy(game, data, rand() % 4);
 		}
 
@@ -557,7 +561,7 @@ void Gamestate_Start(struct Game *game, struct MenuResources* data) {
 
 	data->lightanim=0;
 
-	data->badguySpeed = 1.5;
+	data->badguySpeed = 1.2;
 
 	data->usage = 0;
 
@@ -596,7 +600,7 @@ void Fire(struct Game *game, struct MenuResources *data) {
 	while (tmp) {
 		if (!tmp->melting) {
 			if ((data->markx >= tmp->character->x - 9) && (data->markx <= tmp->character->x + 1)) {
-				data->score += 100 * tmp->speed * data->badguySpeed;
+				data->score += 100 * tmp->speed;
 				SelectSpritesheet(game, tmp->character, "melt");
 				tmp->melting = true;
 			}
