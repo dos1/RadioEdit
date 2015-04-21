@@ -173,7 +173,7 @@ int main(int argc, char **argv){
 	game._priv.font_bsod = NULL;
 	game._priv.console = NULL;
 
-	game.config.fullscreen = atoi(GetConfigOptionDefault(&game, "SuperDerpy", "fullscreen", "1"));
+	game.config.fullscreen = atoi(GetConfigOptionDefault(&game, "SuperDerpy", "fullscreen", "0"));
 	game.config.music = atoi(GetConfigOptionDefault(&game, "SuperDerpy", "music", "10"));
 	game.config.voice = atoi(GetConfigOptionDefault(&game, "SuperDerpy", "voice", "10"));
 	game.config.fx = atoi(GetConfigOptionDefault(&game, "SuperDerpy", "fx", "10"));
@@ -312,7 +312,7 @@ int main(int argc, char **argv){
 	free(gamestate);
 
 	char libname[1024] = {};
-	snprintf(libname, 1024, "libsuperderpy-%s-loading.so", "radioedit");
+	snprintf(libname, 1024, "gamestates/libsuperderpy-%s-loading.dll", "radioedit");
 	void *handle = dlopen(libname, RTLD_NOW);
 	if (!handle) {
 		FatalError(&game, true, "Error while initializing loading screen %s", dlerror());
@@ -376,7 +376,7 @@ int main(int argc, char **argv){
 					al_stop_timer(game._priv.timer);
 					// TODO: take proper game name
 					char libname[1024];
-					snprintf(libname, 1024, "libsuperderpy-%s-%s.so", "radioedit", tmp->name);
+					snprintf(libname, 1024, "gamestates/libsuperderpy-%s-%s.dll", "radioedit", tmp->name);
 					tmp->handle = dlopen(libname,RTLD_NOW);
 					if (!tmp->handle) {
 						//PrintConsole(&game, "Error while loading gamestate \"%s\": %s", tmp->name, dlerror());
@@ -426,7 +426,7 @@ int main(int argc, char **argv){
 						}
 						DrawConsole(&game);
 						al_flip_display();
-						tmp->data = (*tmp->api.Gamestate_Load)(&game, &progress);
+						tmp->data = (*tmp->api.Gamestate_Load)(&game, &progress, &DrawConsole, &SetupViewport, &Console_Unload, &Console_Load);
 						loaded++;
 
 						tmp->loaded = true;
@@ -476,6 +476,11 @@ int main(int argc, char **argv){
 			}
 			else if(ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
 				break;
+			}
+			else if(ev.type == ALLEGRO_EVENT_DISPLAY_FOUND) {
+				SetupViewport(&game);
+				Console_Unload(&game);
+				Console_Load(&game);
 			}
 #ifdef ALLEGRO_MACOSX
 			else if ((ev.type == ALLEGRO_EVENT_KEY_DOWN) && (ev.keyboard.keycode == 104)) { //TODO: report to upstream

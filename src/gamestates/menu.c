@@ -350,9 +350,15 @@ void Gamestate_Logic(struct Game *game, struct MenuResources* data) {
 	TM_Process(data->timeline);
 }
 
-void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
+void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*), void (*DC)(struct Game*), void (*SV)(struct Game*), void (*CL)(struct Game*), void (*CU)(struct Game*)) {
 
 	struct MenuResources *data = malloc(sizeof(struct MenuResources));
+
+data->DrawConsole=DC;
+data->SetupViewport=SV;
+data->Console_Load=CL;
+data->Console_Unload=CU;
+
 
 	data->timeline = TM_Init(game, "main");
 	(*progress)(game);
@@ -537,7 +543,7 @@ void ChangeMenuState(struct Game *game, struct MenuResources* data, enum menusta
 void Gamestate_Unload(struct Game *game, struct MenuResources* data) {
 	if (game->config.fx) {
 		al_clear_to_color(al_map_rgb(0,0,0));
-		DrawConsole(game);
+		(*data->DrawConsole)(game);
 		al_flip_display();
 		al_play_sample_instance(data->quit);
 		al_rest(0.3);
@@ -842,10 +848,10 @@ void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEG
 						else
 							SetConfigOption(game, "SuperDerpy", "fullscreen", "0");
 						al_set_display_flag(game->display, ALLEGRO_FULLSCREEN_WINDOW, data->options.fullscreen);
-						SetupViewport(game);
-						Console_Unload(game);
-						Console_Load(game);
-						PrintConsole(game, "Fullscreen toggled");
+						(*data->SetupViewport)(game);
+						//(*data->Console_Unload)(game);
+						//(*data->Console_Load)(game);
+						//PrintConsole(game, "Fullscreen toggled");
 						break;
 					case 1:
 						data->options.resolution++;
@@ -879,10 +885,10 @@ void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEG
 							al_resize_display(game->display, 320, 180);
 						}
 
-						SetupViewport(game);
-						Console_Unload(game);
-						Console_Load(game);
-						PrintConsole(game, "Resolution changed");
+						(*data->SetupViewport)(game);
+						//(*data->Console_Unload)(game);
+						//(*data->Console_Load)(game);
+						//PrintConsole(game, "Resolution changed");
 						break;
 					case 3:
 						ChangeMenuState(game,data,MENUSTATE_OPTIONS);
