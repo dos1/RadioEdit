@@ -29,7 +29,7 @@
 
 #define SOLO_MIN 20
 
-int Gamestate_ProgressCount = 32;
+int Gamestate_ProgressCount = 33;
 
 void About(struct Game *game, struct MenuResources* data) {
 	ALLEGRO_TRANSFORM trans;
@@ -141,31 +141,26 @@ void AnimateBadguys(struct Game *game, struct MenuResources *data, int i) {
 }
 
 void MoveBadguys(struct Game *game, struct MenuResources *data, int i, float dx) {
-	struct Badguy *tmp = data->badguys[i], *prev = NULL;
+	struct Badguy *tmp = data->badguys[i];
 	while (tmp) {
-		struct Badguy *old = NULL;
 
 		if (!tmp->character->successor) {
 			MoveCharacter(game, tmp->character, dx * tmp->speed * data->badguySpeed, 0, 0);
 		}
 
 		if ((tmp->character->successor) && (strcmp(tmp->character->successor, "blankloop") == 0)) {
-			old=tmp;
-		}
-
-		if (old) {
-			//DestroyCharacter(game, old->character);
-			tmp=tmp->next;
-			//free(old); // FIXME: leak memory for now to avoid crash xDDD
-			if (prev) {
-				prev->next = tmp;
-				prev = tmp;
+			if (tmp->prev) {
+				tmp->prev->next = tmp->next;
+				if (tmp->next) tmp->next->prev = tmp->prev;
 			} else {
-				data->badguys[i] = tmp;
-				prev = NULL;
+				data->badguys[i] = tmp->next;
+				if (tmp->next) tmp->next->prev = NULL;
 			}
+			struct Badguy *old = tmp;
+			tmp = tmp->next;
+			DestroyCharacter(game, old->character);
+			free(old);
 		} else {
-			prev = tmp;
 			tmp = tmp->next;
 		}
 
@@ -186,6 +181,7 @@ void CheckForEnd(struct Game *game, struct MenuResources *data) {
 		}
 		if (lost) break;
 	}
+
 	if (lost) {
 
 		al_stop_sample_instance(data->solo);
@@ -478,6 +474,15 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 
 	(*progress)(game);
 
+	data->badguy = CreateCharacter(game, "badguy");
+	RegisterSpritesheet(game, data->badguy, "walk");
+	RegisterSpritesheet(game, data->badguy, "melt");
+	RegisterSpritesheet(game, data->badguy, "blank");
+	RegisterSpritesheet(game, data->badguy, "blankloop");
+	LoadSpritesheets(game, data->badguy);
+	(*progress)(game);
+
+
 	al_set_target_backbuffer(game->display);
 	return data;
 }
@@ -485,15 +490,12 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 void AddBadguy(struct Game *game, struct MenuResources* data, int i) {
 	struct Badguy *n = malloc(sizeof(struct Badguy));
 	n->next = NULL;
+	n->prev = NULL;
 	n->speed = (rand() % 3) * 0.25 + 1;
 	n->melting = false;
 	n->character = CreateCharacter(game, "badguy");
-	RegisterSpritesheet(game, n->character, "walk");
-	RegisterSpritesheet(game, n->character, "melt");
-	RegisterSpritesheet(game, n->character, "blank");
-	RegisterSpritesheet(game, n->character, "blankloop");
-	//RegisterSpritesheet(game, n->character, "walk");
-	LoadSpritesheets(game, n->character); // FIXME: damnit, it shouldn't be here, hopefully will be fast enough
+	n->character->spritesheets = data->badguy->spritesheets;
+	n->character->shared = true;
 	SelectSpritesheet(game, n->character, "walk");
 	SetCharacterPosition(game, n->character, 320, 108+(i*13), 0);
 
@@ -503,6 +505,7 @@ void AddBadguy(struct Game *game, struct MenuResources* data, int i) {
 			tmp=tmp->next;
 		}
 		tmp->next = n;
+		n->prev = tmp;
 	} else {
 		data->badguys[i] = n;
 	}
@@ -580,6 +583,7 @@ void Gamestate_Unload(struct Game *game, struct MenuResources* data) {
 	}
 	DestroyCharacter(game, data->ego);
 	DestroyCharacter(game, data->cow);
+	DestroyCharacter(game, data->badguy);
 	TM_Destroy(data->timeline);
 }
 
