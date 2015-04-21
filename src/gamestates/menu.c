@@ -121,7 +121,7 @@ void DrawMenuState(struct Game *game, struct MenuResources *data) {
 			DrawTextWithShadow(font, al_map_rgb(255,255,160), game->viewport.width*0.5, game->viewport.height*0.5, ALLEGRO_ALIGN_CENTRE, "Evil record label representatives want");
 			DrawTextWithShadow(font, al_map_rgb(255,255,160), game->viewport.width*0.5, game->viewport.height*0.55, ALLEGRO_ALIGN_CENTRE, "to turn your awesome single into radio edit.");
 			DrawTextWithShadow(font, al_map_rgb(255,255,160), game->viewport.width*0.5, game->viewport.height*0.6, ALLEGRO_ALIGN_CENTRE, "Thankfully, with your facemelting guitar");
-			DrawTextWithShadow(font, al_map_rgb(255,255,160), game->viewport.width*0.5, game->viewport.height*0.65, ALLEGRO_ALIGN_CENTRE, "skills you don't have to give up easily!");
+			DrawTextWithShadow(font, al_map_rgb(255,255,160), game->viewport.width*0.5, game->viewport.height*0.65, ALLEGRO_ALIGN_CENTRE, "skills you don't have to give up so easily!");
 			DrawTextWithShadow(font, al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.8, ALLEGRO_ALIGN_CENTRE, "Press ENTER to continue...");
 			break;
 		default:
