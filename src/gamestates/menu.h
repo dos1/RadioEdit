@@ -51,6 +51,8 @@ struct MenuResources {
 		ALLEGRO_BITMAP *markbig;
 		int markx, marky;
 
+		float badguySpeed;
+
 		ALLEGRO_SAMPLE *chord_samples[7];
 		ALLEGRO_SAMPLE_INSTANCE *chords[7];
 		// 0-2: low; 3-5: high; 6 - solo

@@ -169,7 +169,7 @@ void CheckForEnd(struct Game *game, struct MenuResources *data) {
 	for (i=0; i<4; i++) {
 		struct Badguy *tmp = data->badguys[i];
 		while (tmp) {
-			if (tmp->character->x <= (139-(i*10))) {
+			if (tmp->character->x <= (139-(i*10))-10) {
 				lost = true;
 				break;
 			}
@@ -274,6 +274,7 @@ void Gamestate_Logic(struct Game *game, struct MenuResources* data) {
 			if (data->badguyRate < 20) {
 				data->badguyRate = 20;
 			}
+			data->badguySpeed+= 0.005;
 			AddBadguy(game, data, rand() % 4);
 		}
 
@@ -549,6 +550,8 @@ void Gamestate_Start(struct Game *game, struct MenuResources* data) {
 
 	data->lightanim=0;
 
+	data->badguySpeed = 1.5;
+
 	data->usage = 0;
 
 	SelectSpritesheet(game, data->ego, "stand");
@@ -586,7 +589,7 @@ void Fire(struct Game *game, struct MenuResources *data) {
 	while (tmp) {
 		if (!tmp->melting) {
 			if ((data->markx >= tmp->character->x - 9) && (data->markx <= tmp->character->x + 1)) {
-				data->score += 100 * tmp->speed;
+				data->score += 100 * tmp->speed * data->badguySpeed;
 				SelectSpritesheet(game, tmp->character, "melt");
 				tmp->melting = true;
 			}
