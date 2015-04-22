@@ -73,7 +73,7 @@ if (WIN32)
 
    set(EXEC_INSTALL_PREFIX  "${EXEC_INSTALL_PREFIX}" )        # Base directory for executables and libraries
    set(SHARE_INSTALL_PREFIX "share" )   # Base directory for files which go to share/
-   set(BIN_INSTALL_DIR      "bin"   )   # The install dir for executables (default ${EXEC_INSTALL_PREFIX}/bin)
+   set(BIN_INSTALL_DIR      "."   )   # The install dir for executables (default ${EXEC_INSTALL_PREFIX}/bin)
    set(SBIN_INSTALL_DIR     "sbin"  )   # The install dir for system executables (default ${EXEC_INSTALL_PREFIX}/sbin)
 
    set(LIBEXEC_INSTALL_DIR  "${BIN_INSTALL_DIR}"          ) # The subdirectory relative to the install prefix where libraries will be installed (default is ${BIN_INSTALL_DIR})
