@@ -29,7 +29,7 @@
 
 #define SOLO_MIN 20
 
-int Gamestate_ProgressCount = 33;
+int Gamestate_ProgressCount = 5;
 
 void About(struct Game *game, struct MenuResources* data) {
 	ALLEGRO_TRANSFORM trans;
@@ -52,7 +52,7 @@ void About(struct Game *game, struct MenuResources* data) {
 	char *header2 = "A fatal exception 0xD3RP has occured at 0028:M00F11NZ in GST SD(01) +";
 
 	al_draw_text(game->_priv.font_bsod, al_map_rgb(255,255,255), al_get_display_width(game->display)/2, (int)(al_get_display_height(game->display) * 0.32+2*al_get_font_line_height(game->_priv.font_bsod)*1.25), ALLEGRO_ALIGN_CENTRE, header2);
-	al_draw_textf(game->_priv.font_bsod, al_map_rgb(255,255,255), al_get_display_width(game->display)/2 - al_get_text_width(game->_priv.font_bsod, header2)/2, (int)(al_get_display_height(game->display) * 0.32+3*al_get_font_line_height(game->_priv.font_bsod)*1.25), ALLEGRO_ALIGN_LEFT, "%p and system just doesn't know what went wrong.", game);
+	al_draw_textf(game->_priv.font_bsod, al_map_rgb(255,255,255), al_get_display_width(game->display)/2 - al_get_text_width(game->_priv.font_bsod, header2)/2, (int)(al_get_display_height(game->display) * 0.32+3*al_get_font_line_height(game->_priv.font_bsod)*1.25), ALLEGRO_ALIGN_LEFT, "%p and system just doesn't know what went wrong.", (void*)game);
 
 	al_draw_text(game->_priv.font_bsod, al_map_rgb(255,255,255), al_get_display_width(game->display)/2, (int)(al_get_display_height(game->display) * 0.32+5*al_get_font_line_height(game->_priv.font_bsod)*1.25), ALLEGRO_ALIGN_CENTRE, 	"About screen not implemented!");
 	al_draw_text(game->_priv.font_bsod, al_map_rgb(255,255,255), al_get_display_width(game->display)/2, (int)(al_get_display_height(game->display) * 0.32+6*al_get_font_line_height(game->_priv.font_bsod)*1.25), ALLEGRO_ALIGN_CENTRE, 	"See http://dosowisko.net/radioedit/");
@@ -367,77 +367,42 @@ data->Console_Unload=CU;
 	if (game->config.height / 180 < data->options.resolution) data->options.resolution = game->config.height / 180;
 
 	data->bg = al_load_bitmap( GetDataFilePath(game, "bg.png") );
-	(*progress)(game);
-
 	data->forest = al_load_bitmap( GetDataFilePath(game, "forest.png") );
-	(*progress)(game);
-
 	data->grass = al_load_bitmap( GetDataFilePath(game, "grass.png") );
-	(*progress)(game);
-
 	data->speaker = al_load_bitmap( GetDataFilePath(game, "speaker.png") );
-	(*progress)(game);
-
 	data->stage = al_load_bitmap( GetDataFilePath(game, "stage.png") );
-	(*progress)(game);
-
 	data->cloud = al_load_bitmap( GetDataFilePath(game, "cloud.png") );
-	(*progress)(game);
-
 	data->lines = al_load_bitmap( GetDataFilePath(game, "lines.png") );
-	(*progress)(game);
-
 	data->cable = al_load_bitmap( GetDataFilePath(game, "cable.png") );
-	(*progress)(game);
-
 	data->marksmall = al_load_bitmap( GetDataFilePath(game, "mark-small.png") );
-	(*progress)(game);
-
 	data->markbig = al_load_bitmap( GetDataFilePath(game, "mark-big.png") );
-	(*progress)(game);
-
 	data->light = al_load_bitmap( GetDataFilePath(game, "light.png") );
-	(*progress)(game);
-
 	data->sample = al_load_sample( GetDataFilePath(game, "menu.flac") );
-	(*progress)(game);
-
 	data->click_sample = al_load_sample( GetDataFilePath(game, "click.flac") );
-	(*progress)(game);
-
 	data->quit_sample = al_load_sample( GetDataFilePath(game, "quit.flac") );
-	(*progress)(game);
-
 	data->end_sample = al_load_sample( GetDataFilePath(game, "end.flac") );
-	(*progress)(game);
-
 	data->solo_sample = al_load_sample( GetDataFilePath(game, "solo.flac") );
 	(*progress)(game);
 
 	data->music = al_create_sample_instance(data->sample);
 	al_attach_sample_instance_to_mixer(data->music, game->audio.music);
 	al_set_sample_instance_playmode(data->music, ALLEGRO_PLAYMODE_LOOP);
-	(*progress)(game);
 
 	data->click = al_create_sample_instance(data->click_sample);
 	al_attach_sample_instance_to_mixer(data->click, game->audio.fx);
 	al_set_sample_instance_playmode(data->click, ALLEGRO_PLAYMODE_ONCE);
-	(*progress)(game);
 
 	data->quit = al_create_sample_instance(data->quit_sample);
 	al_attach_sample_instance_to_mixer(data->quit, game->audio.fx);
 	al_set_sample_instance_playmode(data->quit, ALLEGRO_PLAYMODE_ONCE);
-	(*progress)(game);
 
 	data->solo = al_create_sample_instance(data->solo_sample);
 	al_attach_sample_instance_to_mixer(data->solo, game->audio.fx);
 	al_set_sample_instance_playmode(data->solo, ALLEGRO_PLAYMODE_ONCE);
-	(*progress)(game);
 
 	data->end = al_create_sample_instance(data->end_sample);
 	al_attach_sample_instance_to_mixer(data->end, game->audio.fx);
 	al_set_sample_instance_playmode(data->end, ALLEGRO_PLAYMODE_ONCE);
-	(*progress)(game);
 
 	int i;
 	for (i=0; i<6; i++) {
@@ -448,18 +413,17 @@ data->Console_Unload=CU;
 		data->chords[i] = al_create_sample_instance(data->chord_samples[i]);
 		al_attach_sample_instance_to_mixer(data->chords[i], game->audio.fx);
 		al_set_sample_instance_playmode(data->chords[i], ALLEGRO_PLAYMODE_ONCE);
-		(*progress)(game);
 	}
-
-	data->font_title = al_load_ttf_font(GetDataFilePath(game, "fonts/MonkeyIsland.ttf"),game->viewport.height*0.16,0 );
-	(*progress)(game);
-	data->font = al_load_ttf_font(GetDataFilePath(game, "fonts/MonkeyIsland.ttf"),game->viewport.height*0.05,0 );
-	(*progress)(game);
 
 	if (!data->click_sample){
-		fprintf(stderr, "Audio clip sample#3 not loaded!\n" );
+		fprintf(stderr, "Audio clip sample not loaded!\n" );
 		exit(-1);
 	}
+	(*progress)(game);
+
+	data->font_title = al_load_ttf_font(GetDataFilePath(game, "fonts/MonkeyIsland.ttf"),game->viewport.height*0.16,0 );
+	data->font = al_load_ttf_font(GetDataFilePath(game, "fonts/MonkeyIsland.ttf"),game->viewport.height*0.05,0 );
+	(*progress)(game);
 
 	data->ego = CreateCharacter(game, "ego");
 	RegisterSpritesheet(game, data->ego, "stand");
@@ -470,15 +434,11 @@ data->Console_Unload=CU;
 	RegisterSpritesheet(game, data->ego, "cry");
 	LoadSpritesheets(game, data->ego);
 
-	(*progress)(game);
-
 	data->cow = CreateCharacter(game, "cow");
 	RegisterSpritesheet(game, data->cow, "stand");
 	RegisterSpritesheet(game, data->cow, "chew");
 	RegisterSpritesheet(game, data->cow, "look");
 	LoadSpritesheets(game, data->cow);
-
-	(*progress)(game);
 
 	data->badguy = CreateCharacter(game, "badguy");
 	RegisterSpritesheet(game, data->badguy, "walk");
@@ -487,7 +447,6 @@ data->Console_Unload=CU;
 	RegisterSpritesheet(game, data->badguy, "blankloop");
 	LoadSpritesheets(game, data->badguy);
 	(*progress)(game);
-
 
 	al_set_target_backbuffer(game->display);
 	return data;

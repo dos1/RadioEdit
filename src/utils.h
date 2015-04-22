@@ -35,6 +35,7 @@
 #define al_load_ttf_font(a,b,c) al_load_ttf_font(a, (int)(b / 8)*8 == 0 ? 8 : (int)(b / 8)*8, c)
 #define al_draw_text(a,b,c,d,e,f) al_draw_text(a, b, (int)(c), (int)(d), e, f)
 
+char* strdup(const char *str);
 
 /*! \brief Draws rectangle filled with vertical gradient. */
 void DrawVerticalGradientRect(float x, float y, float w, float h, ALLEGRO_COLOR top, ALLEGRO_COLOR bottom);
