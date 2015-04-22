@@ -29,12 +29,12 @@ if(MINGW)
 
     set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -mwindows")
 
-		# resource compilation for MinGW
-		add_custom_command( OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/icon.o
-				 COMMAND ${CMAKE_WINDRES} -I${CMAKE_SOURCE_DIR} -i${CMAKE_SOURCE_DIR}/data/icons/icon.rc
-				 -o ${CMAKE_CURRENT_BINARY_DIR}/icon.o )
-		set(VLMC_SRCS ${VLMC_SRCS} ${CMAKE_CURRENT_BINARY_DIR}/icon.o)
-		#set(LINK_FLAGS -Wl,-subsystem,windows)
+    # resource compilation for MinGW
+    add_custom_command( OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/icon.o
+                        COMMAND ${CMAKE_WINDRES} -I${CMAKE_SOURCE_DIR} -i${CMAKE_SOURCE_DIR}/data/icons/icon.rc
+                        -o ${CMAKE_CURRENT_BINARY_DIR}/icon.o )
+    set(VLMC_SRCS ${VLMC_SRCS} ${CMAKE_CURRENT_BINARY_DIR}/icon.o)
+    #set(LINK_FLAGS -Wl,-subsystem,windows)
 
 endif(MINGW)
 
@@ -59,13 +59,13 @@ IF(WIN32 AND NOT UNIX)
   # There is a bug in NSI that does not handle full unix paths properly. Make
   # sure there is at least one set of four (4) backlasshes.
   SET(CPACK_GENERATOR "NSIS")
-  #SET(CPACK_PACKAGE_ICON "${CMAKE_SOURCE_DIR}/Utilities/Release/InstallIcon.bmp")
   SET(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\radioedit.exe")
   SET(CPACK_NSIS_DISPLAY_NAME "Radio Edit")
   SET(CPACK_NSIS_HELP_LINK "http:\\\\\\\\dosowisko.net\\\\\\\\radioedit")
   SET(CPACK_NSIS_URL_INFO_ABOUT "http:\\\\\\\\dosowisko.net")
   SET(CPACK_NSIS_CONTACT "dos@dosowisko.net")
   SET(CPACK_NSIS_CREATE_ICONS "CreateShortCut '\$SMPROGRAMS\\\\$STARTMENU_FOLDER\\\\${CPACK_NSIS_DISPLAY_NAME}.lnk' '\$INSTDIR\\\\bin\\\\radioedit.exe'")
+  SET(CPACK_NSIS_MUI_FINISHPAGE_RUN "radioedit.exe")
 ELSE(WIN32 AND NOT UNIX)
   SET(CPACK_GENERATOR "DEB" "RPM")
   SET(CPACK_STRIP_FILES "bin/radioedit")

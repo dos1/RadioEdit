@@ -17,18 +17,18 @@ if(APPLE)
 endif(APPLE)
 
 if(MINGW)
-	# resource compilation for MinGW
-	add_custom_command( OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/icon.o COMMAND ${CMAKE_RC_COMPILER} -I${CMAKE_SOURCE_DIR} -i${CMAKE_SOURCE_DIR}/data/icons/icon.rc -o ${CMAKE_CURRENT_BINARY_DIR}/icon.o )
-	set(SRC_LIST ${SRC_LIST} ${CMAKE_CURRENT_BINARY_DIR}/icon.o)
-	set(LINK_FLAGS -Wl,-subsystem,windows)
+  # resource compilation for MinGW
+  add_custom_command( OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/icon.o COMMAND ${CMAKE_RC_COMPILER} -I${CMAKE_SOURCE_DIR} -i${CMAKE_SOURCE_DIR}/data/icons/icon.rc -o ${CMAKE_CURRENT_BINARY_DIR}/icon.o )
+  set(SRC_LIST ${SRC_LIST} ${CMAKE_CURRENT_BINARY_DIR}/icon.o)
+  set(LINK_FLAGS -Wl,-subsystem,windows)
 endif(MINGW)
 
-SET(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib/radioedit:\$ORIGIN/gamestates:\$ORIGIN:\$ORIGIN/../lib:\$ORIGIN/lib")
+SET(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib/radioedit:\$ORIGIN/gamestates:\$ORIGIN:\$ORIGIN/../lib:\$ORIGIN/lib:\$ORIGIN/bin")
 
 if(APPLE)
-    set(EXECUTABLE "RadioEdit")
+  set(EXECUTABLE "RadioEdit")
 else(APPLE)
-    set(EXECUTABLE "radioedit")
+  set(EXECUTABLE "radioedit")
 endif(APPLE)
 
 add_library("libsuperderpy-radioedit" SHARED ${SRC_LIST})

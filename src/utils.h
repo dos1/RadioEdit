@@ -22,7 +22,7 @@
 #include <allegro5/allegro_font.h>
 #include "main.h"
 
-#ifdef ALLEGRO_WIN32
+#ifdef ALLEGRO_WINDOWS
 #define LIBRARY_EXTENTION ".dll"
 #else
 #define LIBRARY_EXTENTION ".so"
