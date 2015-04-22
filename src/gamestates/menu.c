@@ -29,7 +29,7 @@
 
 #define SOLO_MIN 20
 
-int Gamestate_ProgressCount = 33;
+int Gamestate_ProgressCount = 5;
 
 void About(struct Game *game, struct MenuResources* data) {
 	ALLEGRO_TRANSFORM trans;
@@ -361,77 +361,42 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	if (game->config.height / 180 < data->options.resolution) data->options.resolution = game->config.height / 180;
 
 	data->bg = al_load_bitmap( GetDataFilePath(game, "bg.png") );
-	(*progress)(game);
-
 	data->forest = al_load_bitmap( GetDataFilePath(game, "forest.png") );
-	(*progress)(game);
-
 	data->grass = al_load_bitmap( GetDataFilePath(game, "grass.png") );
-	(*progress)(game);
-
 	data->speaker = al_load_bitmap( GetDataFilePath(game, "speaker.png") );
-	(*progress)(game);
-
 	data->stage = al_load_bitmap( GetDataFilePath(game, "stage.png") );
-	(*progress)(game);
-
 	data->cloud = al_load_bitmap( GetDataFilePath(game, "cloud.png") );
-	(*progress)(game);
-
 	data->lines = al_load_bitmap( GetDataFilePath(game, "lines.png") );
-	(*progress)(game);
-
 	data->cable = al_load_bitmap( GetDataFilePath(game, "cable.png") );
-	(*progress)(game);
-
 	data->marksmall = al_load_bitmap( GetDataFilePath(game, "mark-small.png") );
-	(*progress)(game);
-
 	data->markbig = al_load_bitmap( GetDataFilePath(game, "mark-big.png") );
-	(*progress)(game);
-
 	data->light = al_load_bitmap( GetDataFilePath(game, "light.png") );
-	(*progress)(game);
-
 	data->sample = al_load_sample( GetDataFilePath(game, "menu.flac") );
-	(*progress)(game);
-
 	data->click_sample = al_load_sample( GetDataFilePath(game, "click.flac") );
-	(*progress)(game);
-
 	data->quit_sample = al_load_sample( GetDataFilePath(game, "quit.flac") );
-	(*progress)(game);
-
 	data->end_sample = al_load_sample( GetDataFilePath(game, "end.flac") );
-	(*progress)(game);
-
 	data->solo_sample = al_load_sample( GetDataFilePath(game, "solo.flac") );
 	(*progress)(game);
 
 	data->music = al_create_sample_instance(data->sample);
 	al_attach_sample_instance_to_mixer(data->music, game->audio.music);
 	al_set_sample_instance_playmode(data->music, ALLEGRO_PLAYMODE_LOOP);
-	(*progress)(game);
 
 	data->click = al_create_sample_instance(data->click_sample);
 	al_attach_sample_instance_to_mixer(data->click, game->audio.fx);
 	al_set_sample_instance_playmode(data->click, ALLEGRO_PLAYMODE_ONCE);
-	(*progress)(game);
 
 	data->quit = al_create_sample_instance(data->quit_sample);
 	al_attach_sample_instance_to_mixer(data->quit, game->audio.fx);
 	al_set_sample_instance_playmode(data->quit, ALLEGRO_PLAYMODE_ONCE);
-	(*progress)(game);
 
 	data->solo = al_create_sample_instance(data->solo_sample);
 	al_attach_sample_instance_to_mixer(data->solo, game->audio.fx);
 	al_set_sample_instance_playmode(data->solo, ALLEGRO_PLAYMODE_ONCE);
-	(*progress)(game);
 
 	data->end = al_create_sample_instance(data->end_sample);
 	al_attach_sample_instance_to_mixer(data->end, game->audio.fx);
 	al_set_sample_instance_playmode(data->end, ALLEGRO_PLAYMODE_ONCE);
-	(*progress)(game);
 
 	int i;
 	for (i=0; i<6; i++) {
@@ -442,18 +407,17 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 		data->chords[i] = al_create_sample_instance(data->chord_samples[i]);
 		al_attach_sample_instance_to_mixer(data->chords[i], game->audio.fx);
 		al_set_sample_instance_playmode(data->chords[i], ALLEGRO_PLAYMODE_ONCE);
-		(*progress)(game);
 	}
-
-	data->font_title = al_load_ttf_font(GetDataFilePath(game, "fonts/MonkeyIsland.ttf"),game->viewport.height*0.16,0 );
-	(*progress)(game);
-	data->font = al_load_ttf_font(GetDataFilePath(game, "fonts/MonkeyIsland.ttf"),game->viewport.height*0.05,0 );
-	(*progress)(game);
 
 	if (!data->click_sample){
-		fprintf(stderr, "Audio clip sample#3 not loaded!\n" );
+		fprintf(stderr, "Audio clip sample not loaded!\n" );
 		exit(-1);
 	}
+	(*progress)(game);
+
+	data->font_title = al_load_ttf_font(GetDataFilePath(game, "fonts/MonkeyIsland.ttf"),game->viewport.height*0.16,0 );
+	data->font = al_load_ttf_font(GetDataFilePath(game, "fonts/MonkeyIsland.ttf"),game->viewport.height*0.05,0 );
+	(*progress)(game);
 
 	data->ego = CreateCharacter(game, "ego");
 	RegisterSpritesheet(game, data->ego, "stand");
@@ -464,15 +428,11 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	RegisterSpritesheet(game, data->ego, "cry");
 	LoadSpritesheets(game, data->ego);
 
-	(*progress)(game);
-
 	data->cow = CreateCharacter(game, "cow");
 	RegisterSpritesheet(game, data->cow, "stand");
 	RegisterSpritesheet(game, data->cow, "chew");
 	RegisterSpritesheet(game, data->cow, "look");
 	LoadSpritesheets(game, data->cow);
-
-	(*progress)(game);
 
 	data->badguy = CreateCharacter(game, "badguy");
 	RegisterSpritesheet(game, data->badguy, "walk");
@@ -481,7 +441,6 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	RegisterSpritesheet(game, data->badguy, "blankloop");
 	LoadSpritesheets(game, data->badguy);
 	(*progress)(game);
-
 
 	al_set_target_backbuffer(game->display);
 	return data;
