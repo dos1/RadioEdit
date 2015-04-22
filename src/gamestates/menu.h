@@ -101,13 +101,4 @@ struct MenuResources {
 		} options; /*!< Options which can be changed in menu. */
 
 		int score;
-
-// functions from the engine
-void (*SetupViewport)(struct Game *game);
-void (*Console_Unload)(struct Game *game);
-void (*Console_Load)(struct Game *game);
-void (*DrawConsole)(struct Game *game);
 };
-
-void AddBadguy(struct Game *game, struct MenuResources* data, int i);
-void ChangeMenuState(struct Game *game, struct MenuResources* data, enum menustate_enum state);

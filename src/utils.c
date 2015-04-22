@@ -20,6 +20,7 @@
  */
 
 #include <allegro5/allegro_primitives.h>
+#include <allegro5/allegro_ttf.h>
 #include "stdio.h"
 #include "config.h"
 #include "string.h"
@@ -31,6 +32,84 @@ char* strdup(const char *str) {
 	char *dup = malloc(n);
 	if (dup) { strcpy(dup, str); }
 	return dup;
+}
+
+void DrawConsole(struct Game *game) {
+	if (game->_priv.showconsole) {
+		ALLEGRO_TRANSFORM trans;
+		al_identity_transform(&trans);
+		int clipX, clipY, clipWidth, clipHeight;
+		al_get_clipping_rectangle(&clipX, &clipY, &clipWidth, &clipHeight);
+		al_use_transform(&trans);
+
+		al_draw_bitmap(game->_priv.console, clipX, clipY, 0);
+		double game_time = al_get_time();
+		if(game_time - game->_priv.fps_count.old_time >= 1.0) {
+			game->_priv.fps_count.fps = game->_priv.fps_count.frames_done / (game_time - game->_priv.fps_count.old_time);
+			game->_priv.fps_count.frames_done = 0;
+			game->_priv.fps_count.old_time = game_time;
+		}
+		char sfps[6] = { };
+		snprintf(sfps, 6, "%.0f", game->_priv.fps_count.fps);
+		al_use_transform(&game->projection);
+
+		DrawTextWithShadow(game->_priv.font, al_map_rgb(255,255,255), game->viewport.width*0.99, 0, ALLEGRO_ALIGN_RIGHT, sfps);
+
+	}
+	game->_priv.fps_count.frames_done++;
+}
+
+void Console_Load(struct Game *game) {
+	game->_priv.font_console = NULL;
+	game->_priv.console = NULL;
+	game->_priv.font_console = al_load_ttf_font(GetDataFilePath(game, "fonts/DejaVuSansMono.ttf"),al_get_display_height(game->display)*0.025,0 );
+	if (al_get_display_height(game->display)*0.025 >= 16) {
+		game->_priv.font_bsod = al_load_ttf_font(GetDataFilePath(game, "fonts/PerfectDOSVGA437.ttf"),16,0 );
+	} else {
+		game->_priv.font_bsod = al_load_ttf_font(GetDataFilePath(game, "fonts/DejaVuSansMono.ttf"), al_get_display_height(game->display)*0.025,0 );
+	}
+	game->_priv.console = al_create_bitmap((al_get_display_width(game->display) / 320) * 320, al_get_font_line_height(game->_priv.font_console)*5);
+	game->_priv.font = al_load_ttf_font(GetDataFilePath(game, "fonts/MonkeyIsland.ttf"), 0 ,0 );
+	al_set_target_bitmap(game->_priv.console);
+	al_clear_to_color(al_map_rgba(0,0,0,80));
+	al_set_target_bitmap(al_get_backbuffer(game->display));
+}
+
+void Console_Unload(struct Game *game) {
+	al_destroy_font(game->_priv.font);
+	al_destroy_font(game->_priv.font_console);
+	al_destroy_bitmap(game->_priv.console);
+}
+
+
+void SetupViewport(struct Game *game) {
+	game->viewport.width = 320;
+	game->viewport.height = 180;
+
+	int resolution = al_get_display_width(game->display) / 320;
+	if (al_get_display_height(game->display) / 180 < resolution) resolution = al_get_display_height(game->display) / 180;
+	if (resolution < 1) resolution = 1;
+
+	if (atoi(GetConfigOptionDefault(game, "SuperDerpy", "letterbox", "1"))) {
+		int clipWidth = 320 * resolution, clipHeight = 180 * resolution;
+		int clipX = (al_get_display_width(game->display) - clipWidth) / 2, clipY = (al_get_display_height(game->display) - clipHeight) / 2;
+		al_set_clipping_rectangle(clipX, clipY, clipWidth, clipHeight);
+
+		al_build_transform(&game->projection, clipX, clipY, resolution, resolution, 0.0f);
+		al_use_transform(&game->projection);
+
+	} else if ((atoi(GetConfigOptionDefault(game, "SuperDerpy", "rotate", "1"))) && (game->viewport.height > game->viewport.width)) {
+		al_identity_transform(&game->projection);
+		al_rotate_transform(&game->projection, 0.5*ALLEGRO_PI);
+		al_translate_transform(&game->projection, game->viewport.width, 0);
+		al_scale_transform(&game->projection, resolution, resolution);
+		al_use_transform(&game->projection);
+		int temp = game->viewport.height;
+		game->viewport.height = game->viewport.width;
+		game->viewport.width = temp;
+	}
+	if (game->_priv.console) Console_Unload(game);
+	Console_Load(game);
 }
 
 void DrawVerticalGradientRect(float x, float y, float w, float h, ALLEGRO_COLOR top, ALLEGRO_COLOR bottom) {
@@ -203,6 +282,7 @@ void FatalError(struct Game *game, bool fatal, char* format, ...) {
 }
 
 void TestPath(char* filename, char* subpath, char** result) {
+	if (*result) return; //already found
 	ALLEGRO_PATH *tail = al_create_path(filename);
 	ALLEGRO_PATH *path = al_get_standard_path(ALLEGRO_RESOURCES_PATH);
 	ALLEGRO_PATH *data = al_create_path(subpath);
@@ -234,10 +314,13 @@ char* GetDataFilePath(struct Game *game, char* filename) {
 		return strdup(origfn);
 	}
 
+	TestPath(filename, "data/", &result);
 	TestPath(filename, "../share/radioedit/data/", &result);
 	TestPath(filename, "../data/", &result);
+#ifdef ALLEGRO_MACOSX
 	TestPath(filename, "../Resources/data/", &result);
-	TestPath(filename, "data/", &result);
+	TestPath(filename, "../Resources/gamestates/", &result);
+#endif
 
 	if (!result) {
 		FatalError(game, true, "Could not find data file: %s!", filename);
@@ -245,7 +328,6 @@ char* GetDataFilePath(struct Game *game, char* filename) {
 	}
 	return result;
 }
-
 
 void PrintConsole(struct Game *game, char* format, ...) {
 	va_list vl;

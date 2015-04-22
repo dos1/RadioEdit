@@ -38,19 +38,19 @@ struct Game {
 		ALLEGRO_TRANSFORM projection;
 
 		struct {
-				int width; /*!< Actual available width of viewport. */
-				int height; /*!< Actual available height of viewport. */
+			int width; /*!< Actual available width of viewport. */
+			int height; /*!< Actual available height of viewport. */
 		} viewport;
 
 		struct {
-				int fx; /*!< Effects volume. */
-				int music; /*!< Music volume. */
-				int voice; /*!< Voice volume. */
-				bool fullscreen; /*!< Fullscreen toggle. */
-				bool debug; /*!< Toggles debug mode. */
-				int fps; /*!< FPS limit */
-				int width; /*!< Width of window as being set in configuration. */
-				int height; /*!< Height of window as being set in configuration. */
+			int fx; /*!< Effects volume. */
+			int music; /*!< Music volume. */
+			int voice; /*!< Voice volume. */
+			bool fullscreen; /*!< Fullscreen toggle. */
+			bool debug; /*!< Toggles debug mode. */
+			int fps; /*!< FPS limit */
+			int width; /*!< Width of window as being set in configuration. */
+			int height; /*!< Height of window as being set in configuration. */
 		} config;
 
 		struct {

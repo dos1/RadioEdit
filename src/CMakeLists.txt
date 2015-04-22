@@ -23,7 +23,7 @@ if(MINGW)
 	set(LINK_FLAGS -Wl,-subsystem,windows)
 endif(MINGW)
 
-SET(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib/radioedit:\$ORIGIN/gamestates:\$ORIGIN:\$ORIGIN/../lib")
+SET(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib/radioedit:\$ORIGIN/gamestates:\$ORIGIN:\$ORIGIN/../lib:\$ORIGIN/lib")
 
 #IF(${PACKAGE_BUILD})
 #  SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)

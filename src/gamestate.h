@@ -41,7 +41,7 @@ struct Gamestate {
 				void (*Gamestate_Draw)(struct Game *game, void* data);
 				void (*Gamestate_Logic)(struct Game *game, void* data);
 
-				void* (*Gamestate_Load)();
+				void* (*Gamestate_Load)(struct Game *game, void (*progress)(struct Game *game));
 				void (*Gamestate_Start)(struct Game *game, void* data);
 				void (*Gamestate_Pause)(struct Game *game, void* data);
 				void (*Gamestate_Resume)(struct Game *game, void* data);

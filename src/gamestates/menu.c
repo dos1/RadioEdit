@@ -167,6 +167,12 @@ void MoveBadguys(struct Game *game, struct MenuResources *data, int i, float dx)
 	}
 }
 
+void ChangeMenuState(struct Game *game, struct MenuResources* data, enum menustate_enum state) {
+	data->menustate=state;
+	data->selected=0;
+	PrintConsole(game, "menu state changed %d", state);
+}
+
 void CheckForEnd(struct Game *game, struct MenuResources *data) {
 	int i;
 	bool lost = false;
@@ -278,6 +284,30 @@ void Gamestate_Draw(struct Game *game, struct MenuResources* data) {
 	}
 }
 
+void AddBadguy(struct Game *game, struct MenuResources* data, int i) {
+	struct Badguy *n = malloc(sizeof(struct Badguy));
+	n->next = NULL;
+	n->prev = NULL;
+	n->speed = (rand() % 3) * 0.25 + 1;
+	n->melting = false;
+	n->character = CreateCharacter(game, "badguy");
+	n->character->spritesheets = data->badguy->spritesheets;
+	n->character->shared = true;
+	SelectSpritesheet(game, n->character, "walk");
+	SetCharacterPosition(game, n->character, 320, 108+(i*13), 0);
+
+	if (data->badguys[i]) {
+		struct Badguy *tmp = data->badguys[i];
+		while (tmp->next) {
+			tmp=tmp->next;
+		}
+		tmp->next = n;
+		n->prev = tmp;
+	} else {
+		data->badguys[i] = n;
+	}
+}
+
 void Gamestate_Logic(struct Game *game, struct MenuResources* data) {
 	data->cloud_position-=0.1;
 	if (data->cloud_position<-40) { data->cloud_position=100; PrintConsole(game, "cloud_position"); }
@@ -346,15 +376,9 @@ void Gamestate_Logic(struct Game *game, struct MenuResources* data) {
 	TM_Process(data->timeline);
 }
 
-void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*), void (*DC)(struct Game*), void (*SV)(struct Game*), void (*CL)(struct Game*), void (*CU)(struct Game*)) {
+void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 
 	struct MenuResources *data = malloc(sizeof(struct MenuResources));
-
-data->DrawConsole=DC;
-data->SetupViewport=SV;
-data->Console_Load=CL;
-data->Console_Unload=CU;
-
 
 	data->timeline = TM_Init(game, "main");
 	(*progress)(game);
@@ -452,30 +476,6 @@ data->Console_Unload=CU;
 	return data;
 }
 
-void AddBadguy(struct Game *game, struct MenuResources* data, int i) {
-	struct Badguy *n = malloc(sizeof(struct Badguy));
-	n->next = NULL;
-	n->prev = NULL;
-	n->speed = (rand() % 3) * 0.25 + 1;
-	n->melting = false;
-	n->character = CreateCharacter(game, "badguy");
-	n->character->spritesheets = data->badguy->spritesheets;
-	n->character->shared = true;
-	SelectSpritesheet(game, n->character, "walk");
-	SetCharacterPosition(game, n->character, 320, 108+(i*13), 0);
-
-	if (data->badguys[i]) {
-		struct Badguy *tmp = data->badguys[i];
-		while (tmp->next) {
-			tmp=tmp->next;
-		}
-		tmp->next = n;
-		n->prev = tmp;
-	} else {
-		data->badguys[i] = n;
-	}
-}
-
 void DestroyBadguys(struct Game *game, struct MenuResources* data, int i) {
 	struct Badguy *tmp = data->badguys[i];
 	while (tmp) {
@@ -496,16 +496,10 @@ void Gamestate_Stop(struct Game *game, struct MenuResources* data) {
 	}
 }
 
-void ChangeMenuState(struct Game *game, struct MenuResources* data, enum menustate_enum state) {
-	data->menustate=state;
-	data->selected=0;
-	PrintConsole(game, "menu state changed %d", state);
-}
-
 void Gamestate_Unload(struct Game *game, struct MenuResources* data) {
 	if (game->config.fx) {
 		al_clear_to_color(al_map_rgb(0,0,0));
-		(*data->DrawConsole)(game);
+		DrawConsole(game);
 		al_flip_display();
 		al_play_sample_instance(data->quit);
 		al_rest(0.3);
@@ -811,10 +805,8 @@ void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEG
 						else
 							SetConfigOption(game, "SuperDerpy", "fullscreen", "0");
 						al_set_display_flag(game->display, ALLEGRO_FULLSCREEN_WINDOW, data->options.fullscreen);
-						(*data->SetupViewport)(game);
-						//(*data->Console_Unload)(game);
-						//(*data->Console_Load)(game);
-						//PrintConsole(game, "Fullscreen toggled");
+						SetupViewport(game);
+						PrintConsole(game, "Fullscreen toggled");
 						break;
 					case 1:
 						data->options.resolution++;
@@ -848,10 +840,8 @@ void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEG
 							al_resize_display(game->display, 320, 180);
 						}
 
-						(*data->SetupViewport)(game);
-						//(*data->Console_Unload)(game);
-						//(*data->Console_Load)(game);
-						//PrintConsole(game, "Resolution changed");
+						SetupViewport(game);
+						PrintConsole(game, "Resolution changed");
 						break;
 					case 3:
 						ChangeMenuState(game,data,MENUSTATE_OPTIONS);

@@ -22,6 +22,13 @@
 #include <allegro5/allegro_font.h>
 #include "main.h"
 
+#ifdef ALLEGRO_WIN32
+#define LIBRARY_EXTENTION ".dll"
+#else
+#define LIBRARY_EXTENTION ".so"
+#endif
+
+
 // hacks for "pixelness"
 #define al_draw_bitmap(a,b,c,d) al_draw_bitmap(a,(int)(b), (int)(c), d)
 #define al_draw_scaled_bitmap(a,b,c,d,e,f,g,h,i,j) al_draw_scaled_bitmap(a,b,c,d,e,(int)(f), (int)(g), (int)(h), (int)(i), j)
@@ -36,6 +43,10 @@
 #define al_draw_text(a,b,c,d,e,f) al_draw_text(a, b, (int)(c), (int)(d), e, f)
 
 char* strdup(const char *str);
+
+void SetupViewport(struct Game *game);
+void Console_Unload(struct Game *game);
+void DrawConsole(struct Game *game);
 
 /*! \brief Draws rectangle filled with vertical gradient. */
 void DrawVerticalGradientRect(float x, float y, float w, float h, ALLEGRO_COLOR top, ALLEGRO_COLOR bottom);
@@ -53,6 +64,8 @@ ALLEGRO_BITMAP* LoadScaledBitmap(struct Game *game, char* filename, int width, i
 
 /*! \brief Finds path for data file. */
 char* GetDataFilePath(struct Game *game, char* filename);
+
+char* GetLibFilePath(struct Game *game, char* filename);
 
 /*! \brief Print some message on game console.
  *
