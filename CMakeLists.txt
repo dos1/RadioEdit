@@ -74,9 +74,7 @@ ELSE(WIN32 AND NOT UNIX)
       SET(CPACK_GENERATOR "DragNDrop")
   ENDIF(APPLE)
 ENDIF(WIN32 AND NOT UNIX)
-IF(UNIX)
-  SET(CPACK_SET_DESTDIR "ON")
-ENDIF(UNIX)
+
 SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "Sebastian Krzyszkowiak <dos@dosowisko.net>")
 SET(CPACK_DEBIAN_PACKAGE_DEPENDS "liballegro5.0,liballegro-ttf5.0,liballegro-image5.0,liballegro-audio5.0,liballegro-acodec5.0 ")
 
