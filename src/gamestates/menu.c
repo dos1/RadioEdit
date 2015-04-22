@@ -269,7 +269,7 @@ void Gamestate_Draw(struct Game *game, struct MenuResources* data) {
 		DrawTextWithShadow(data->font, al_map_rgb(255,255,255), 2, game->viewport.height - 10, ALLEGRO_ALIGN_LEFT, score);
 
 		if ((data->soloready >= SOLO_MIN) && (data->soloanim <= 30)) {
-			DrawTextWithShadow(data->font, al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.15, ALLEGRO_ALIGN_CENTRE, "Press ENTER to play solo!");
+			DrawTextWithShadow(data->font, al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.15, ALLEGRO_ALIGN_CENTRE, "Press ENTER to play a solo!");
 		}
 	}
 
