@@ -319,17 +319,13 @@ int main(int argc, char **argv){
 		exit(1);
 	} else {
 
-		void gs_error() {
-			FatalError(&game, true, "Error on resolving loading symbol: %s", dlerror());
-			exit(1);
-		}
+		#define GS_LOADINGERROR FatalError(&game, true, "Error on resolving loading symbol: %s", dlerror()); exit(1);
 
-		if (!(game._priv.loading.Draw = dlsym(handle, "Draw"))) { gs_error(); }
-
-		if (!(game._priv.loading.Load = dlsym(handle, "Load"))) { gs_error(); }
-		if (!(game._priv.loading.Start = dlsym(handle, "Start"))) { gs_error(); }
-		if (!(game._priv.loading.Stop = dlsym(handle, "Stop"))) { gs_error(); }
-		if (!(game._priv.loading.Unload = dlsym(handle, "Unload"))) { gs_error(); }
+		if (!(game._priv.loading.Draw = dlsym(handle, "Draw"))) { GS_LOADINGERROR; }
+		if (!(game._priv.loading.Load = dlsym(handle, "Load"))) { GS_LOADINGERROR; }
+		if (!(game._priv.loading.Start = dlsym(handle, "Start"))) { GS_LOADINGERROR; }
+		if (!(game._priv.loading.Stop = dlsym(handle, "Stop"))) { GS_LOADINGERROR; }
+		if (!(game._priv.loading.Unload = dlsym(handle, "Unload"))) { GS_LOADINGERROR; }
 	}
 
 	game._priv.loading.data = (*game._priv.loading.Load)(&game);
@@ -386,27 +382,22 @@ int main(int argc, char **argv){
 						tmp->pending_start = false;
 					} else {
 
-						void gs_error() {
-							FatalError(&game, true, "Error on resolving gamestate symbol: %s", dlerror());
-							tmp->pending_load = false;
-							tmp->pending_start = false;
-							tmp=tmp->next;
-						}
+#define GS_ERROR FatalError(&game, false, "Error on resolving gamestate symbol: %s", dlerror()); tmp->pending_load = false; tmp->pending_start = false; tmp=tmp->next; continue;
 
-						if (!(tmp->api.Gamestate_Draw = dlsym(tmp->handle, "Gamestate_Draw"))) { gs_error(); continue; }
-						if (!(tmp->api.Gamestate_Logic = dlsym(tmp->handle, "Gamestate_Logic"))) { gs_error(); continue; }
+						if (!(tmp->api.Gamestate_Draw = dlsym(tmp->handle, "Gamestate_Draw"))) { GS_ERROR; }
+						if (!(tmp->api.Gamestate_Logic = dlsym(tmp->handle, "Gamestate_Logic"))) { GS_ERROR; }
 
-						if (!(tmp->api.Gamestate_Load = dlsym(tmp->handle, "Gamestate_Load"))) { gs_error(); continue; }
-						if (!(tmp->api.Gamestate_Start = dlsym(tmp->handle, "Gamestate_Start"))) { gs_error(); continue; }
-						if (!(tmp->api.Gamestate_Pause = dlsym(tmp->handle, "Gamestate_Pause"))) { gs_error(); continue; }
-						if (!(tmp->api.Gamestate_Resume = dlsym(tmp->handle, "Gamestate_Resume"))) { gs_error(); continue; }
-						if (!(tmp->api.Gamestate_Stop = dlsym(tmp->handle, "Gamestate_Stop"))) { gs_error(); continue; }
-						if (!(tmp->api.Gamestate_Unload = dlsym(tmp->handle, "Gamestate_Unload"))) { gs_error(); continue; }
+						if (!(tmp->api.Gamestate_Load = dlsym(tmp->handle, "Gamestate_Load"))) { GS_ERROR; }
+						if (!(tmp->api.Gamestate_Start = dlsym(tmp->handle, "Gamestate_Start"))) { GS_ERROR; }
+						if (!(tmp->api.Gamestate_Pause = dlsym(tmp->handle, "Gamestate_Pause"))) { GS_ERROR; }
+						if (!(tmp->api.Gamestate_Resume = dlsym(tmp->handle, "Gamestate_Resume"))) { GS_ERROR; }
+						if (!(tmp->api.Gamestate_Stop = dlsym(tmp->handle, "Gamestate_Stop"))) { GS_ERROR; }
+						if (!(tmp->api.Gamestate_Unload = dlsym(tmp->handle, "Gamestate_Unload"))) { GS_ERROR; }
 
-						if (!(tmp->api.Gamestate_ProcessEvent = dlsym(tmp->handle, "Gamestate_ProcessEvent"))) { gs_error(); continue; }
-						if (!(tmp->api.Gamestate_Reload = dlsym(tmp->handle, "Gamestate_Reload"))) { gs_error(); continue; }
+						if (!(tmp->api.Gamestate_ProcessEvent = dlsym(tmp->handle, "Gamestate_ProcessEvent"))) { GS_ERROR; }
+						if (!(tmp->api.Gamestate_Reload = dlsym(tmp->handle, "Gamestate_Reload"))) { GS_ERROR; }
 
-						if (!(tmp->api.Gamestate_ProgressCount = dlsym(tmp->handle, "Gamestate_ProgressCount"))) { gs_error(); continue; }
+						if (!(tmp->api.Gamestate_ProgressCount = dlsym(tmp->handle, "Gamestate_ProgressCount"))) { GS_ERROR; }
 
 						int p = 0;
 						void progress(struct Game *game) {
@@ -426,7 +417,7 @@ int main(int argc, char **argv){
 						}
 						DrawConsole(&game);
 						al_flip_display();
-						tmp->data = (*tmp->api.Gamestate_Load)(&game, &progress);
+						tmp->data = (*tmp->api.Gamestate_Load)(&game, &progress); // feel free to replace "progress" with empty function if you want to compile with clang
 						loaded++;
 
 						tmp->loaded = true;

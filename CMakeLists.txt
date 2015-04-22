@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 
 project(RadioEdit C)
 
-SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -g")
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -g -std=c99")
 if(APPLE)
   SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fnested-functions")
   if(CMAKE_INSTALL_PREFIX MATCHES "/usr/local")

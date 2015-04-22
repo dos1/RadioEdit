@@ -22,8 +22,16 @@
 #include <allegro5/allegro_primitives.h>
 #include "stdio.h"
 #include "config.h"
+#include "string.h"
 #include "math.h"
 #include "utils.h"
+
+char* strdup(const char *str) {
+	int n = strlen(str) + 1;
+	char *dup = malloc(n);
+	if (dup) { strcpy(dup, str); }
+	return dup;
+}
 
 void DrawVerticalGradientRect(float x, float y, float w, float h, ALLEGRO_COLOR top, ALLEGRO_COLOR bottom) {
 	ALLEGRO_VERTEX v[] = {
@@ -48,6 +56,14 @@ void DrawTextWithShadow(ALLEGRO_FONT *font, ALLEGRO_COLOR color, float x, float 
 	al_draw_text(font, color, (int)x, (int)y, flags, text);
 }
 
+/* linear filtering code written by SiegeLord */
+ALLEGRO_COLOR interpolate(ALLEGRO_COLOR c1, ALLEGRO_COLOR c2, float frac) {
+	return al_map_rgba_f(c1.r + frac * (c2.r - c1.r),
+											 c1.g + frac * (c2.g - c1.g),
+											 c1.b + frac * (c2.b - c1.b),
+											 c1.a + frac * (c2.a - c1.a));
+}
+
 /*! \brief Scales bitmap using software linear filtering method to current target. */
 void ScaleBitmap(ALLEGRO_BITMAP* source, int width, int height) {
 	if ((al_get_bitmap_width(source)==width) && (al_get_bitmap_height(source)==height)) {
@@ -57,15 +73,6 @@ void ScaleBitmap(ALLEGRO_BITMAP* source, int width, int height) {
 	int x, y;
 	al_lock_bitmap(al_get_target_bitmap(), ALLEGRO_PIXEL_FORMAT_ANY, ALLEGRO_LOCK_WRITEONLY);
 	al_lock_bitmap(source, ALLEGRO_PIXEL_FORMAT_ANY, ALLEGRO_LOCK_READONLY);
-
-	/* linear filtering code written by SiegeLord */
-
-	ALLEGRO_COLOR interpolate(ALLEGRO_COLOR c1, ALLEGRO_COLOR c2, float frac) {
-		return al_map_rgba_f(c1.r + frac * (c2.r - c1.r),
-							 c1.g + frac * (c2.g - c1.g),
-							 c1.b + frac * (c2.b - c1.b),
-							 c1.a + frac * (c2.a - c1.a));
-	}
 
 	for (y = 0; y < height; y++) {
 		float pixy = ((float)y / height) * ((float)al_get_bitmap_height(source) - 1);
@@ -96,33 +103,23 @@ ALLEGRO_BITMAP* LoadScaledBitmap(struct Game *game, char* filename, int width, i
 	al_set_target_bitmap(target);
 	al_clear_to_color(al_map_rgba(0,0,0,0));
 	char* origfn = GetDataFilePath(game, filename);
-	void GenerateBitmap() {
-		if (memoryscale) al_set_new_bitmap_flags(ALLEGRO_MEMORY_BITMAP);
 
-		source = al_load_bitmap( origfn );
-		if (memoryscale) {
-			al_set_new_bitmap_flags(ALLEGRO_MIN_LINEAR);
-			ScaleBitmap(source, width, height);
-		}
-		else {
-			al_draw_scaled_bitmap(source, 0, 0, al_get_bitmap_width(source), al_get_bitmap_height(source), 0, 0, width, height, 0);
-		}
-		/*al_save_bitmap(cachefn, target);
-		PrintConsole(game, "Cache bitmap %s generated.", filename);*/
-		al_destroy_bitmap(source);
+	if (memoryscale) al_set_new_bitmap_flags(ALLEGRO_MEMORY_BITMAP);
+
+	source = al_load_bitmap( origfn );
+	if (memoryscale) {
+		al_set_new_bitmap_flags(ALLEGRO_MIN_LINEAR);
+		ScaleBitmap(source, width, height);
+	}
+	else {
+		al_draw_scaled_bitmap(source, 0, 0, al_get_bitmap_width(source), al_get_bitmap_height(source), 0, 0, width, height, 0);
 	}
 
-	/*source = al_load_bitmap( cachefn );
-	if (source) {
-		if ((al_get_bitmap_width(source)!=width) || (al_get_bitmap_height(source)!=height)) {
-			al_destroy_bitmap(source);*/
-	GenerateBitmap();
+	al_destroy_bitmap(source);
+
 	free(origfn);
 	return target;
-	/*	}
-		return source;
-	} else GenerateBitmap();
-	return target;*/
+
 }
 
 void FatalError(struct Game *game, bool fatal, char* format, ...) {
@@ -205,6 +202,21 @@ void FatalError(struct Game *game, bool fatal, char* format, ...) {
 	al_use_transform(&game->projection);
 }
 
+void TestPath(char* filename, char* subpath, char** result) {
+	ALLEGRO_PATH *tail = al_create_path(filename);
+	ALLEGRO_PATH *path = al_get_standard_path(ALLEGRO_RESOURCES_PATH);
+	ALLEGRO_PATH *data = al_create_path(subpath);
+	al_join_paths(path, data);
+	al_join_paths(path, tail);
+	//printf("Testing for %s\n", al_path_cstr(path, ALLEGRO_NATIVE_PATH_SEP));
+	if (al_filename_exists(al_path_cstr(path, ALLEGRO_NATIVE_PATH_SEP))) {
+		*result = strdup(al_path_cstr(path, ALLEGRO_NATIVE_PATH_SEP));
+	}
+	al_destroy_path(tail);
+	al_destroy_path(data);
+	al_destroy_path(path);
+}
+
 char* GetDataFilePath(struct Game *game, char* filename) {
 
 	//TODO: support for current game
@@ -222,24 +234,10 @@ char* GetDataFilePath(struct Game *game, char* filename) {
 		return strdup(origfn);
 	}
 
-	void TestPath(char* subpath) {
-		ALLEGRO_PATH *tail = al_create_path(filename);
-		ALLEGRO_PATH *path = al_get_standard_path(ALLEGRO_RESOURCES_PATH);
-		ALLEGRO_PATH *data = al_create_path(subpath);
-		al_join_paths(path, data);
-		al_join_paths(path, tail);
-		//printf("Testing for %s\n", al_path_cstr(path, ALLEGRO_NATIVE_PATH_SEP));
-		if (al_filename_exists(al_path_cstr(path, ALLEGRO_NATIVE_PATH_SEP))) {
-			result = strdup(al_path_cstr(path, ALLEGRO_NATIVE_PATH_SEP));
-		}
-		al_destroy_path(tail);
-		al_destroy_path(data);
-		al_destroy_path(path);
-	}
-	TestPath("../share/radioedit/data/");
-	TestPath("../data/");
-	TestPath("../Resources/data/");
-	TestPath("data/");
+	TestPath(filename, "../share/radioedit/data/", &result);
+	TestPath(filename, "../data/", &result);
+	TestPath(filename, "../Resources/data/", &result);
+	TestPath(filename, "data/", &result);
 
 	if (!result) {
 		FatalError(game, true, "Could not find data file: %s!", filename);
