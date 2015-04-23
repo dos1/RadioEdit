@@ -5,6 +5,10 @@ SET(SRC_LIST
   gamestate.c
 )
 
+SET(EXECUTABLE_SRC_LIST
+  main.c
+)
+
 find_package(Allegro5 REQUIRED)
 find_package(Allegro5Font REQUIRED)
 find_package(Allegro5TTF REQUIRED)
@@ -19,7 +23,7 @@ endif(APPLE)
 if(MINGW)
   # resource compilation for MinGW
   add_custom_command( OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/icon.o COMMAND ${CMAKE_RC_COMPILER} -I${CMAKE_SOURCE_DIR} -i${CMAKE_SOURCE_DIR}/data/icons/icon.rc -o ${CMAKE_CURRENT_BINARY_DIR}/icon.o )
-  set(SRC_LIST ${SRC_LIST} ${CMAKE_CURRENT_BINARY_DIR}/icon.o)
+  set(EXECUTABLE_SRC_LIST ${EXECUTABLE_SRC_LIST} ${CMAKE_CURRENT_BINARY_DIR}/icon.o)
   set(LINK_FLAGS -Wl,-subsystem,windows)
 endif(MINGW)
 
@@ -32,7 +36,7 @@ else(APPLE)
 endif(APPLE)
 
 add_library("libsuperderpy-radioedit" SHARED ${SRC_LIST})
-add_executable(${EXECUTABLE} WIN32 MACOSX_BUNDLE "main.c")
+add_executable(${EXECUTABLE} WIN32 MACOSX_BUNDLE ${EXECUTABLE_SRC_LIST})
 
 SET_TARGET_PROPERTIES("libsuperderpy-radioedit" PROPERTIES PREFIX "")
 
