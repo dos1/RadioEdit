@@ -337,6 +337,7 @@ void PrintConsole(struct Game *game, char* format, ...) {
 	va_end(vl);
 	if (game->config.debug) { printf("%s\n", text); fflush(stdout); }
 	if (!game->_priv.console) return;
+	if ((!game->config.debug) && (!game->_priv.showconsole)) return;
 	ALLEGRO_BITMAP *con = al_create_bitmap(al_get_bitmap_width(game->_priv.console), al_get_bitmap_height(game->_priv.console));
 	al_set_target_bitmap(con);
 	al_clear_to_color(al_map_rgba(0,0,0,80));
@@ -350,7 +351,7 @@ void PrintConsole(struct Game *game, char* format, ...) {
 }
 
 
-void SelectSpritesheet(struct Game *game, struct Character *character, char* name) {
+void SelectSpritesheet(struct Game *game, struct Character *character, char *name) {
 	struct Spritesheet *tmp = character->spritesheets;
 	PrintConsole(game, "Selecting spritesheet for %s: %s", character->name, name);
 	if (!tmp) {
@@ -367,9 +368,15 @@ void SelectSpritesheet(struct Game *game, struct Character *character, char* nam
 				character->successor = NULL;
 			}
 			character->pos = 0;
-			if (character->bitmap) al_destroy_bitmap(character->bitmap);
-			character->bitmap = al_create_bitmap(tmp->width / tmp->cols, tmp->height / tmp->rows);
-			PrintConsole(game, "SUCCESS: Spritesheet for %s activated: %s (%dx%d)", character->name, name, al_get_bitmap_width(character->bitmap), al_get_bitmap_height(character->bitmap));
+			if (character->bitmap) {
+				if ((al_get_bitmap_width(character->bitmap) != tmp->width / tmp->cols) || (al_get_bitmap_height(character->bitmap) != tmp->height / tmp->rows)) {
+					al_destroy_bitmap(character->bitmap);
+					character->bitmap = al_create_bitmap(tmp->width / tmp->cols, tmp->height / tmp->rows);
+				}
+			} else {
+				character->bitmap = al_create_bitmap(tmp->width / tmp->cols, tmp->height / tmp->rows);
+			}
+			PrintConsole(game, "SUCCESS: Spritesheet for %s activated: %s (%dx%d)", character->name, character->spritesheet->name, al_get_bitmap_width(character->bitmap), al_get_bitmap_height(character->bitmap));
 			return;
 		}
 		tmp = tmp->next;
