@@ -144,11 +144,11 @@ void MoveBadguys(struct Game *game, struct MenuResources *data, int i, float dx)
 	struct Badguy *tmp = data->badguys[i];
 	while (tmp) {
 
-		if (!tmp->character->successor) {
+		if (!tmp->character->spritesheet->kill) {
 			MoveCharacter(game, tmp->character, dx * tmp->speed * data->badguySpeed, 0, 0);
 		}
 
-		if ((tmp->character->successor) && (strcmp(tmp->character->successor, "blankloop") == 0)) {
+		if (tmp->character->dead) {
 			if (tmp->prev) {
 				tmp->prev->next = tmp->next;
 				if (tmp->next) tmp->next->prev = tmp->prev;
@@ -158,8 +158,11 @@ void MoveBadguys(struct Game *game, struct MenuResources *data, int i, float dx)
 			}
 			struct Badguy *old = tmp;
 			tmp = tmp->next;
-			DestroyCharacter(game, old->character);
-			free(old);
+			old->character->dead = true;
+			old->prev = NULL;
+			old->next = data->destroyQueue;
+			if (data->destroyQueue) data->destroyQueue->prev = old;
+			data->destroyQueue = old;
 		} else {
 			tmp = tmp->next;
 		}
@@ -333,6 +336,7 @@ void Gamestate_Logic(struct Game *game, struct MenuResources* data) {
 			if (data->badguyRate < 20) {
 				data->badguyRate = 20;
 			}
+
 			data->badguySpeed+= 0.001;
 			AddBadguy(game, data, rand() % 4);
 		}
@@ -359,7 +363,7 @@ void Gamestate_Logic(struct Game *game, struct MenuResources* data) {
 			for (i=0; i<4; i++) {
 				struct Badguy *tmp = data->badguys[i];
 				while (tmp) {
-					if (!tmp->melting) {
+					if ((!tmp->melting) && (!tmp->character->dead)) {
 						data->score += 100 * tmp->speed;
 						SelectSpritesheet(game, tmp->character, "melt");
 						tmp->melting = true;
@@ -467,8 +471,6 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	data->badguy = CreateCharacter(game, "badguy");
 	RegisterSpritesheet(game, data->badguy, "walk");
 	RegisterSpritesheet(game, data->badguy, "melt");
-	RegisterSpritesheet(game, data->badguy, "blank");
-	RegisterSpritesheet(game, data->badguy, "blankloop");
 	LoadSpritesheets(game, data->badguy);
 	(*progress)(game);
 
@@ -478,11 +480,19 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 
 void DestroyBadguys(struct Game *game, struct MenuResources* data, int i) {
 	struct Badguy *tmp = data->badguys[i];
+	if (!tmp) {
+		tmp = data->destroyQueue;
+		data->destroyQueue = NULL;
+	}
 	while (tmp) {
 		DestroyCharacter(game, tmp->character);
 		struct Badguy *old = tmp;
 		tmp = tmp->next;
 		free(old);
+		if ((!tmp) && (data->destroyQueue)) {
+			tmp = data->destroyQueue;
+			data->destroyQueue = NULL;
+		}
 	}
 	data->badguys[i] = NULL;
 }
@@ -608,6 +618,7 @@ void Gamestate_Start(struct Game *game, struct MenuResources* data) {
 	data->badguys[1] = NULL;
 	data->badguys[2] = NULL;
 	data->badguys[3] = NULL;
+	data->destroyQueue = NULL;
 
 	data->badguyRate = 100;
 	data->timeTillNextBadguy = 0;
