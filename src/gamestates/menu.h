@@ -100,5 +100,14 @@ struct MenuResources {
 				int resolution;
 		} options; /*!< Options which can be changed in menu. */
 
+		struct {
+				int key;
+				bool shift;
+				int delay;
+				// workaround for random bogus UP/DOWN events
+				int lastkey;
+				int lastdelay;
+		} keys;
+
 		int score;
 };

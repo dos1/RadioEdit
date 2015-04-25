@@ -315,13 +315,97 @@ void AddBadguy(struct Game *game, struct MenuResources* data, int i) {
 	}
 }
 
+void Fire(struct Game *game, struct MenuResources *data) {
+
+	if (data->soloactive) return;
+
+	data->lightx = data->markx;
+	data->lighty = data->marky;
+	data->lightanim=1;
+	data->usage=30;
+
+	int num = rand() % 3;
+	if (((al_get_sample_instance_position(data->music) + 20000) / 44118) % 2 == 1) {
+		num += 3;
+	}
+	al_stop_sample_instance(data->chords[num]);
+	al_play_sample_instance(data->chords[num]);
+	PrintConsole(game, "playing chord nr %d", num);
+
+	struct Badguy *tmp = data->badguys[data->marky];
+	while (tmp) {
+		if (!tmp->melting) {
+			if ((data->markx >= tmp->character->x - 9) && (data->markx <= tmp->character->x + 1)) {
+				data->score += 100 * tmp->speed;
+				SelectSpritesheet(game, tmp->character, "melt");
+				data->soloready++;
+				tmp->melting = true;
+			}
+		}
+		tmp=tmp->next;
+	}
+}
+
 void Gamestate_Logic(struct Game *game, struct MenuResources* data) {
+
+	if (data->keys.lastkey == data->keys.key) {
+		data->keys.delay = data->keys.lastdelay; // workaround for random bugus UP/DOWN events
+	}
+
 	data->cloud_position-=0.1;
 	if (data->cloud_position<-40) { data->cloud_position=100; PrintConsole(game, "cloud_position"); }
 	AnimateCharacter(game, data->ego, 1);
 	AnimateCharacter(game, data->cow, 1);
 
 	if (data->menustate == MENUSTATE_HIDDEN) {
+
+		if ((data->keys.key) && (data->keys.delay < 3)) {
+
+			if (data->keys.key==ALLEGRO_KEY_UP) {
+				data->marky--;
+				int min = 139-(data->marky*10);
+				int step = 10 - (data->markx - min) / ((320-min)/10);
+				data->markx+= step;
+				if (data->marky < 0) {
+					data->markx-=4*step;
+					data->marky = 3;
+				}
+			}
+
+			if (data->keys.key==ALLEGRO_KEY_DOWN) {
+				data->marky++;
+				int min = 139-(data->marky*10);
+				int step = 10 - (data->markx - min) / ((320-min)/10);
+				data->markx-= step;
+				if (data->marky > 3) {
+					data->markx+=4*step;
+					data->marky = 0;
+				}
+			}
+
+			if (data->keys.key==ALLEGRO_KEY_LEFT) {
+				int min = 139-(data->marky*10);
+				data->markx-= data->keys.shift ? 5 : 2;
+				if (data->markx < min) data->markx=min;
+			}
+
+			if (data->keys.key==ALLEGRO_KEY_RIGHT) {
+				int max = 320 - al_get_bitmap_width(data->markbig);
+				if (data->marky < 2) max = 320 - al_get_bitmap_width(data->marksmall);
+				data->markx+= data->keys.shift ? 5 : 2;
+				if (data->markx > max) data->markx=max;
+			}
+
+			if ((data->keys.key==ALLEGRO_KEY_SPACE) && (data->usage==0)) {
+				Fire(game, data);
+			}
+
+			if (data->keys.delay == INT_MIN) data->keys.delay = 45;
+			else data->keys.delay += 4;
+
+		} else if (data->keys.key) {
+			data->keys.delay-=3;
+		}
 
 		AnimateBadguys(game, data, 0);
 		AnimateBadguys(game, data, 1);
@@ -380,6 +464,9 @@ void Gamestate_Logic(struct Game *game, struct MenuResources* data) {
 	}
 
 	if (data->soloflash) data->soloflash--;
+
+	data->keys.lastkey = data->keys.key;
+	data->keys.lastdelay = data->keys.delay;
 
 	TM_Process(data->timeline);
 }
@@ -604,6 +691,10 @@ void Gamestate_Start(struct Game *game, struct MenuResources* data) {
 	data->soloflash = 0;
 	data->soloready = 0;
 
+	data->keys.key = 0;
+	data->keys.delay = 0;
+	data->keys.shift = false;
+
 	data->lightanim=0;
 
 	data->badguySpeed = 1.2;
@@ -628,37 +719,6 @@ void Gamestate_Start(struct Game *game, struct MenuResources* data) {
 	data->timeTillNextBadguy = 0;
 }
 
-void Fire(struct Game *game, struct MenuResources *data) {
-
-	if (data->soloactive) return;
-
-	data->lightx = data->markx;
-	data->lighty = data->marky;
-	data->lightanim=1;
-	data->usage=30;
-
-	int num = rand() % 3;
-	if (((al_get_sample_instance_position(data->music) + 20000) / 44118) % 2 == 1) {
-		num += 3;
-	}
-	al_stop_sample_instance(data->chords[num]);
-	al_play_sample_instance(data->chords[num]);
-	PrintConsole(game, "playing chord nr %d", num);
-
-	struct Badguy *tmp = data->badguys[data->marky];
-	while (tmp) {
-		if (!tmp->melting) {
-			if ((data->markx >= tmp->character->x - 9) && (data->markx <= tmp->character->x + 1)) {
-				data->score += 100 * tmp->speed;
-				SelectSpritesheet(game, tmp->character, "melt");
-				data->soloready++;
-				tmp->melting = true;
-			}
-		}
-		tmp=tmp->next;
-	}
-}
-
 void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEGRO_EVENT *ev) {
 	TM_HandleEvent(data->timeline, ev);
 
@@ -668,58 +728,51 @@ void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEG
 	}
 
 	if (data->menustate == MENUSTATE_HIDDEN) {
-		if (ev->type != ALLEGRO_EVENT_KEY_CHAR) return;
 
-		if (ev->keyboard.keycode==ALLEGRO_KEY_ESCAPE) {
-			Gamestate_Stop(game,data);
-			Gamestate_Start(game,data);
-		}
+		if (ev->type == ALLEGRO_EVENT_KEY_DOWN) {
 
-		if (ev->keyboard.keycode==ALLEGRO_KEY_UP) {
-			data->marky--;
-			int min = 139-(data->marky*10);
-			int step = 10 - (data->markx - min) / ((320-min)/10);
-			data->markx+= step;
-			if (data->marky < 0) {
-				data->markx-=4*step;
-				data->marky = 3;
+			switch (ev->keyboard.keycode) {
+				case ALLEGRO_KEY_UP:
+				case ALLEGRO_KEY_DOWN:
+				case ALLEGRO_KEY_LEFT:
+				case ALLEGRO_KEY_RIGHT:
+				case ALLEGRO_KEY_SPACE:
+					if (data->keys.key != ev->keyboard.keycode) {
+						data->keys.key = ev->keyboard.keycode;
+						data->keys.delay = INT_MIN;
+					}
+					break;
+				case ALLEGRO_KEY_ESCAPE:
+					Gamestate_Stop(game, data);
+					Gamestate_Start(game, data);
+					break;
+				case ALLEGRO_KEY_LSHIFT:
+				case ALLEGRO_KEY_RSHIFT:
+					data->keys.shift = true;
+					break;
+				case ALLEGRO_KEY_ENTER:
+					if ((!data->soloactive) && (data->soloready >= SOLO_MIN)) {
+						data->soloready = 0;
+						al_play_sample_instance(data->solo);
+						data->soloactive = true;
+						data->badguySpeed-=0.5;
+					}
+					break;
+				default:
+					data->keys.key = 0;
+					break;
 			}
-		}
-
-		if (ev->keyboard.keycode==ALLEGRO_KEY_DOWN) {
-			data->marky++;
-			int min = 139-(data->marky*10);
-			int step = 10 - (data->markx - min) / ((320-min)/10);
-			data->markx-= step;
-			if (data->marky > 3) {
-				data->markx+=4*step;
-				data->marky = 0;
-			}
-		}
-
-		if (ev->keyboard.keycode==ALLEGRO_KEY_LEFT) {
-			int min = 139-(data->marky*10);
-			data->markx-= (ev->keyboard.modifiers && ALLEGRO_KEYMOD_SHIFT) ? 5 : 2;
-			if (data->markx < min) data->markx=min;
-		}
-
-		if (ev->keyboard.keycode==ALLEGRO_KEY_RIGHT) {
-			int max = 320 - al_get_bitmap_width(data->markbig);
-			if (data->marky < 2) max = 320 - al_get_bitmap_width(data->marksmall);
-			data->markx+= (ev->keyboard.modifiers && ALLEGRO_KEYMOD_SHIFT) ? 5 : 2;
-			if (data->markx > max) data->markx=max;
-		}
-
-		if ((ev->keyboard.keycode==ALLEGRO_KEY_SPACE) && (data->usage==0)) {
-			Fire(game, data);
-		}
-
-		if (ev->keyboard.keycode==ALLEGRO_KEY_ENTER) {
-			if ((!data->soloactive) && (data->soloready >= SOLO_MIN)) {
-				data->soloready = 0;
-				al_play_sample_instance(data->solo);
-				data->soloactive = true;
-				data->badguySpeed-=0.5;
+		} else if (ev->type == ALLEGRO_EVENT_KEY_UP) {
+			switch (ev->keyboard.keycode) {
+				case ALLEGRO_KEY_LSHIFT:
+				case ALLEGRO_KEY_RSHIFT:
+					data->keys.shift = false;
+					break;
+				default:
+					if (ev->keyboard.keycode == data->keys.key) {
+						data->keys.key = 0;
+					}
+					break;
 			}
 		}
 
