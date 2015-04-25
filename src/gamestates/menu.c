@@ -73,24 +73,24 @@ void DrawMenuState(struct Game *game, struct MenuResources *data) {
 	struct ALLEGRO_COLOR color;
 	switch (data->menustate) {
 		case MENUSTATE_MAIN:
-			DrawTextWithShadow(font, data->selected==0 ? al_map_rgb(255,255,160) : al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.5, ALLEGRO_ALIGN_CENTRE, "Start game");
-			DrawTextWithShadow(font, data->selected==1 ? al_map_rgb(255,255,160) : al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.6, ALLEGRO_ALIGN_CENTRE, "Options");
-			DrawTextWithShadow(font, data->selected==2 ? al_map_rgb(255,255,160) : al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.7, ALLEGRO_ALIGN_CENTRE, "About");
-			DrawTextWithShadow(font, data->selected==3 ? al_map_rgb(255,255,160) : al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.8, ALLEGRO_ALIGN_CENTRE, "Exit");
+			DrawTextWithShadow(font, data->selected==0 ? al_map_rgb(255,255,128) : al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.5, ALLEGRO_ALIGN_CENTRE, "Start game");
+			DrawTextWithShadow(font, data->selected==1 ? al_map_rgb(255,255,128) : al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.6, ALLEGRO_ALIGN_CENTRE, "Options");
+			DrawTextWithShadow(font, data->selected==2 ? al_map_rgb(255,255,128) : al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.7, ALLEGRO_ALIGN_CENTRE, "About");
+			DrawTextWithShadow(font, data->selected==3 ? al_map_rgb(255,255,128) : al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.8, ALLEGRO_ALIGN_CENTRE, "Exit");
 			break;
 		case MENUSTATE_OPTIONS:
-			DrawTextWithShadow(font, data->selected==0 ? al_map_rgb(255,255,160) : al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.5, ALLEGRO_ALIGN_CENTRE, "Video settings");
-			DrawTextWithShadow(font, data->selected==1 ? al_map_rgb(255,255,160) : al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.6, ALLEGRO_ALIGN_CENTRE, "Audio settings");
-			DrawTextWithShadow(font, data->selected==3 ? al_map_rgb(255,255,160) : al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.8, ALLEGRO_ALIGN_CENTRE, "Back");
+			DrawTextWithShadow(font, data->selected==0 ? al_map_rgb(255,255,128) : al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.5, ALLEGRO_ALIGN_CENTRE, "Video settings");
+			DrawTextWithShadow(font, data->selected==1 ? al_map_rgb(255,255,128) : al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.6, ALLEGRO_ALIGN_CENTRE, "Audio settings");
+			DrawTextWithShadow(font, data->selected==3 ? al_map_rgb(255,255,128) : al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.8, ALLEGRO_ALIGN_CENTRE, "Back");
 			break;
 		case MENUSTATE_AUDIO:
 			if (game->config.music) snprintf(text, 255, "Music volume: %d0%%", game->config.music);
 			else sprintf(text, "Music disabled");
-			DrawTextWithShadow(font, data->selected==0 ? al_map_rgb(255,255,160) : al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.5, ALLEGRO_ALIGN_CENTRE, text);
+			DrawTextWithShadow(font, data->selected==0 ? al_map_rgb(255,255,128) : al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.5, ALLEGRO_ALIGN_CENTRE, text);
 			if (game->config.fx) snprintf(text, 255, "Effects volume: %d0%%", game->config.fx);
 			else sprintf(text, "Effects disabled");
-			DrawTextWithShadow(font, data->selected==1 ? al_map_rgb(255,255,160) : al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.6, ALLEGRO_ALIGN_CENTRE, text);
-			DrawTextWithShadow(font, data->selected==3 ? al_map_rgb(255,255,160) : al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.8, ALLEGRO_ALIGN_CENTRE, "Back");
+			DrawTextWithShadow(font, data->selected==1 ? al_map_rgb(255,255,128) : al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.6, ALLEGRO_ALIGN_CENTRE, text);
+			DrawTextWithShadow(font, data->selected==3 ? al_map_rgb(255,255,128) : al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.8, ALLEGRO_ALIGN_CENTRE, "Back");
 			break;
 		case MENUSTATE_ABOUT:
 			About(game, data);
@@ -102,12 +102,12 @@ void DrawMenuState(struct Game *game, struct MenuResources *data) {
 			}
 			else {
 				sprintf(text, "Fullscreen: no");
-				color = data->selected==1 ? al_map_rgb(255,255,160) : al_map_rgb(255,255,255);
+				color = data->selected==1 ? al_map_rgb(255,255,128) : al_map_rgb(255,255,255);
 			}
-			DrawTextWithShadow(font, data->selected==0 ? al_map_rgb(255,255,160) : al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.5, ALLEGRO_ALIGN_CENTRE, text);
+			DrawTextWithShadow(font, data->selected==0 ? al_map_rgb(255,255,128) : al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.5, ALLEGRO_ALIGN_CENTRE, text);
 			sprintf(text, "Resolution: %dx", data->options.resolution);
 			DrawTextWithShadow(font, color, game->viewport.width*0.5, game->viewport.height*0.6, ALLEGRO_ALIGN_CENTRE, text);
-			DrawTextWithShadow(font, data->selected==3 ? al_map_rgb(255,255,160) : al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.8, ALLEGRO_ALIGN_CENTRE, "Back");
+			DrawTextWithShadow(font, data->selected==3 ? al_map_rgb(255,255,128) : al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.8, ALLEGRO_ALIGN_CENTRE, "Back");
 			break;
 		case MENUSTATE_HIDDEN:
 			break;
@@ -115,18 +115,22 @@ void DrawMenuState(struct Game *game, struct MenuResources *data) {
 			DrawTextWithShadow(font, al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.5, ALLEGRO_ALIGN_CENTRE, "You lost!");
 			sprintf(text, "Score: %d", data->score);
 			DrawTextWithShadow(font, al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.6, ALLEGRO_ALIGN_CENTRE, text);
-			DrawTextWithShadow(font, al_map_rgb(255,255,160), game->viewport.width*0.5, game->viewport.height*0.8, ALLEGRO_ALIGN_CENTRE, "Back to menu");
+			DrawTextWithShadow(font, al_map_rgb(255,255,128), game->viewport.width*0.5, game->viewport.height*0.8, ALLEGRO_ALIGN_CENTRE, "Back to menu");
 			break;
 		case MENUSTATE_INTRO:
-			DrawTextWithShadow(font, al_map_rgb(255,255,160), game->viewport.width*0.5, game->viewport.height*0.5, ALLEGRO_ALIGN_CENTRE, "Evil record label representatives want");
-			DrawTextWithShadow(font, al_map_rgb(255,255,160), game->viewport.width*0.5, game->viewport.height*0.55, ALLEGRO_ALIGN_CENTRE, "to turn your awesome single into radio edit.");
-			DrawTextWithShadow(font, al_map_rgb(255,255,160), game->viewport.width*0.5, game->viewport.height*0.6, ALLEGRO_ALIGN_CENTRE, "Thankfully, with your facemelting guitar");
-			DrawTextWithShadow(font, al_map_rgb(255,255,160), game->viewport.width*0.5, game->viewport.height*0.65, ALLEGRO_ALIGN_CENTRE, "skills you don't have to give up so easily!");
+			DrawTextWithShadow(font, al_map_rgba(0,0,0,64), 46, game->viewport.height*0.5, ALLEGRO_ALIGN_CENTRE, "Evi");
+			DrawTextWithShadow(font, al_map_rgba(0,0,0,64), 51, game->viewport.height*0.5-1, ALLEGRO_ALIGN_CENTRE, "vi");
+			DrawTextWithShadow(font, al_map_rgb(255,255,128), game->viewport.width*0.5, game->viewport.height*0.5, ALLEGRO_ALIGN_CENTRE, "Evil record label representatives want");
+			DrawTextWithShadow(font, al_map_rgba(0,0,0,64), 47, game->viewport.height*0.55, ALLEGRO_ALIGN_CENTRE, "tu");
+			DrawTextWithShadow(font, al_map_rgba(0,0,0,64), 48, game->viewport.height*0.55 - 1, ALLEGRO_ALIGN_CENTRE, "tu");
+			DrawTextWithShadow(font, al_map_rgb(255,255,128), game->viewport.width*0.5, game->viewport.height*0.55, ALLEGRO_ALIGN_CENTRE, "to turn your awesome single into radio edit.");
+			DrawTextWithShadow(font, al_map_rgb(255,255,128), game->viewport.width*0.5, game->viewport.height*0.6, ALLEGRO_ALIGN_CENTRE, "Thankfully, with your facemelting guitar");
+			DrawTextWithShadow(font, al_map_rgb(255,255,128), game->viewport.width*0.5, game->viewport.height*0.65, ALLEGRO_ALIGN_CENTRE, "skills you don't have to give up so easily!");
 			DrawTextWithShadow(font, al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.8, ALLEGRO_ALIGN_CENTRE, "Press ENTER to continue...");
 			break;
 		default:
 			data->selected=0;
-			DrawTextWithShadow(font, data->selected==0 ? al_map_rgb(255,255,160) : al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.5, ALLEGRO_ALIGN_CENTRE, "Not implemented yet");
+			DrawTextWithShadow(font, data->selected==0 ? al_map_rgb(255,255,128) : al_map_rgb(255,255,255), game->viewport.width*0.5, game->viewport.height*0.5, ALLEGRO_ALIGN_CENTRE, "Not implemented yet");
 			break;
 	}
 	free(text);

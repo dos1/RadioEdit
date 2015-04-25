@@ -194,15 +194,15 @@ int main(int argc, char **argv){
 
 	game._priv.showconsole = game.config.debug;
 
-	al_flip_display();
 	al_clear_to_color(al_map_rgb(0,0,0));
-	al_wait_for_vsync();
 	game._priv.timer = al_create_timer(ALLEGRO_BPS_TO_SECS(60)); // logic timer
 	if(!game._priv.timer) {
 		FatalError(&game, true, "Failed to create logic timer.");
 		return -1;
 	}
 	al_register_event_source(game._priv.event_queue, al_get_timer_event_source(game._priv.timer));
+
+	al_flip_display();
 	al_start_timer(game._priv.timer);
 
 	setlocale(LC_NUMERIC, "C");
