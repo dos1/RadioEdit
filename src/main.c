@@ -146,6 +146,9 @@ int main(int argc, char **argv){
 	al_set_new_display_option(ALLEGRO_OPENGL, atoi(GetConfigOptionDefault(&game, "SuperDerpy", "opengl", "1")), ALLEGRO_SUGGEST);
 	al_set_new_display_option(ALLEGRO_SAMPLE_BUFFERS, 1, ALLEGRO_SUGGEST);
 	al_set_new_display_option(ALLEGRO_SAMPLES, 8, ALLEGRO_SUGGEST);
+#ifdef ALLEGRO_WINDOWS
+	al_set_new_window_position(0, 0); // workaround nasty Windows bug with window being created off-screen
+#endif
 
 	game.display = al_create_display(game.config.width, game.config.height);
 	if(!game.display) {
@@ -194,15 +197,15 @@ int main(int argc, char **argv){
 
 	game._priv.showconsole = game.config.debug;
 
-	al_flip_display();
 	al_clear_to_color(al_map_rgb(0,0,0));
-	al_wait_for_vsync();
 	game._priv.timer = al_create_timer(ALLEGRO_BPS_TO_SECS(60)); // logic timer
 	if(!game._priv.timer) {
 		FatalError(&game, true, "Failed to create logic timer.");
 		return -1;
 	}
 	al_register_event_source(game._priv.event_queue, al_get_timer_event_source(game._priv.timer));
+
+	al_flip_display();
 	al_start_timer(game._priv.timer);
 
 	setlocale(LC_NUMERIC, "C");

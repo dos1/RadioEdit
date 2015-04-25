@@ -69,7 +69,7 @@ struct MenuResources {
 				struct Badguy *next, *prev;
 				float speed;
 				bool melting;
-		} *badguys[4];
+		} *badguys[4], *destroyQueue;
 
 		int timeTillNextBadguy, badguyRate;
 
