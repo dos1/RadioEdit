@@ -29,13 +29,6 @@ if(MINGW)
 
     set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -mwindows")
 
-    # resource compilation for MinGW
-    add_custom_command( OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/icon.o
-                        COMMAND ${CMAKE_WINDRES} -I${CMAKE_SOURCE_DIR} -i${CMAKE_SOURCE_DIR}/data/icons/icon.rc
-                        -o ${CMAKE_CURRENT_BINARY_DIR}/icon.o )
-    set(VLMC_SRCS ${VLMC_SRCS} ${CMAKE_CURRENT_BINARY_DIR}/icon.o)
-    #set(LINK_FLAGS -Wl,-subsystem,windows)
-
 endif(MINGW)
 
 add_subdirectory(src)
