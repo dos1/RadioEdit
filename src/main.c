@@ -147,7 +147,7 @@ int main(int argc, char **argv){
 	al_set_new_display_option(ALLEGRO_SAMPLE_BUFFERS, 1, ALLEGRO_SUGGEST);
 	al_set_new_display_option(ALLEGRO_SAMPLES, 8, ALLEGRO_SUGGEST);
 #ifdef ALLEGRO_WINDOWS
-	al_set_new_window_position(0, 0); // workaround nasty Windows bug with window being created off-screen
+	al_set_new_window_position(20, 40); // workaround nasty Windows bug with window being created off-screen
 #endif
 
 	game.display = al_create_display(game.config.width, game.config.height);
