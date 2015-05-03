@@ -301,6 +301,8 @@ char* GetDataFilePath(struct Game *game, char* filename) {
 
 	//TODO: support for current game
 
+	//FIXME: strdups result in memory leaks!
+
 	char *result = 0;
 
 	if (al_filename_exists(filename)) {

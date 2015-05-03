@@ -694,6 +694,7 @@ void Gamestate_Start(struct Game *game, struct MenuResources* data) {
 	data->keys.key = 0;
 	data->keys.delay = 0;
 	data->keys.shift = false;
+	data->keys.lastkey = -1;
 
 	data->lightanim=0;
 
