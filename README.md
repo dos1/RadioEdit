@@ -2,12 +2,14 @@
 
 Dependences (for Debian-based distros):
 
-	sudo apt install liballegro5.0 liballegro-ttf5.0 liballegro-image5.0 liballegro-audio5.0 liballegro-acodec5.0
+	sudo apt install liballegro5.2 liballegro-ttf5.2 liballegro-image5.2 liballegro-audio5.2 liballegro-acodec5.2
 
 The game uses CMake as build system, so its building process is pretty typical.
 
 Building dependences:
 
+	git submodule init
+	git submodule update
 	sudo apt install liballegro5-dev liballegro-ttf5-dev liballegro-image5-dev liballegro-audio5-dev liballegro-acodec5-dev
 
 Compilation:
@@ -19,12 +21,6 @@ Compilation:
 Running (from top directory):
 
 	build/src/radioedit
-
-Installation (as root):
-
-	make install
-
-For packaging information, read lib/README.txt
 
 https://github.com/dos1/RadioEdit/
 

@@ -20,16 +20,102 @@
  */
 #include <stdio.h>
 #include <math.h>
-#include <allegro5/allegro_ttf.h>
-#include <allegro5/allegro_primitives.h>
-#include "../config.h"
-#include "../utils.h"
-#include "../timeline.h"
-#include "menu.h"
+#include "../common.h"
+#include <libsuperderpy.h>
 
 #define SOLO_MIN 20
 
 int Gamestate_ProgressCount = 5;
+
+
+/*! \brief Enum of menu states in Menu and Pause game states. */
+enum menustate_enum {
+	MENUSTATE_MAIN,
+	MENUSTATE_OPTIONS,
+	MENUSTATE_VIDEO,
+	MENUSTATE_AUDIO,
+	MENUSTATE_HIDDEN,
+	MENUSTATE_ABOUT,
+	MENUSTATE_LOST,
+	MENUSTATE_INTRO,
+	// FIXME: menustate abuse eeeeew
+};
+
+/*! \brief Resources used by Menu state. */
+struct MenuResources {
+		ALLEGRO_BITMAP *bg; /*!< Bitmap with lower portion of menu landscape. */
+		ALLEGRO_BITMAP *cloud; /*!< Bitmap with bigger cloud. */
+		ALLEGRO_BITMAP *grass;
+		ALLEGRO_BITMAP *forest;
+		ALLEGRO_BITMAP *stage;
+		ALLEGRO_BITMAP *speaker;
+		ALLEGRO_BITMAP *lines;
+		ALLEGRO_BITMAP *cable;
+		ALLEGRO_BITMAP *light;
+
+		ALLEGRO_BITMAP *marksmall;
+		ALLEGRO_BITMAP *markbig;
+		int markx, marky;
+
+		float badguySpeed;
+
+		ALLEGRO_SAMPLE *chord_samples[6];
+		ALLEGRO_SAMPLE_INSTANCE *chords[6];
+		// 0-2: low; 3-5: high
+
+		int usage;
+		int lightx, lighty, lightanim;
+
+		int soloready, soloanim, soloflash;
+		bool soloactive;
+
+		struct Badguy {
+				struct Character *character;
+				struct Badguy *next, *prev;
+				float speed;
+				bool melting;
+		} *badguys[4], *destroyQueue;
+
+		int timeTillNextBadguy, badguyRate;
+
+		struct Character *ego;
+		struct Character *cow;
+		struct Character *badguy;
+		struct Timeline *timeline;
+		float cloud_position; /*!< Position of bigger cloud. */
+		ALLEGRO_SAMPLE *sample; /*!< Music sample. */
+		ALLEGRO_SAMPLE *click_sample; /*!< Click sound sample. */
+		ALLEGRO_SAMPLE *quit_sample;
+		ALLEGRO_SAMPLE *end_sample;
+		ALLEGRO_SAMPLE *solo_sample;
+		ALLEGRO_SAMPLE_INSTANCE *music; /*!< Sample instance with music sound. */
+		ALLEGRO_SAMPLE_INSTANCE *click; /*!< Sample instance with click sound. */
+		ALLEGRO_SAMPLE_INSTANCE *quit;
+		ALLEGRO_SAMPLE_INSTANCE *solo;
+		ALLEGRO_SAMPLE_INSTANCE *end;
+		ALLEGRO_FONT *font_title; /*!< Font of "Super Derpy" text. */
+		ALLEGRO_FONT *font; /*!< Font of standard menu item. */
+		int selected; /*!< Number of selected menu item. */
+		enum menustate_enum menustate; /*!< Current menu page. */
+		struct {
+				bool fullscreen;
+				int fps;
+				int width;
+				int height;
+				int resolution;
+		} options; /*!< Options which can be changed in menu. */
+
+		struct {
+				int key;
+				bool shift;
+				int delay;
+				// workaround for random bogus UP/DOWN events
+				int lastkey;
+				int lastdelay;
+		} keys;
+
+		int score;
+};
 
 void About(struct Game *game, struct MenuResources* data) {
 	ALLEGRO_TRANSFORM trans;
@@ -186,7 +272,7 @@ void CheckForEnd(struct Game *game, struct MenuResources *data) {
 	for (i=0; i<4; i++) {
 		struct Badguy *tmp = data->badguys[i];
 		while (tmp) {
-			if (tmp->character->x <= (139-(i*10))-10) {
+			if (GetCharacterX(game, tmp->character) <= ((139-(i*10))-10)) {
 				lost = true;
 				break;
 			}
@@ -226,7 +312,7 @@ void Gamestate_Draw(struct Game *game, struct MenuResources* data) {
 
 	al_draw_bitmap(data->bg,0, 0,0);
 
-	al_draw_bitmap(data->cloud,game->viewport.width*data->cloud_position/100, 10 ,0);
+	al_draw_bitmap(data->cloud,(int)(game->viewport.width*data->cloud_position/100), 10 ,0);
 
 	al_draw_bitmap(data->forest,0, 0,0);
 
@@ -335,7 +421,7 @@ void Fire(struct Game *game, struct MenuResources *data) {
 	struct Badguy *tmp = data->badguys[data->marky];
 	while (tmp) {
 		if (!tmp->melting) {
-			if ((data->markx >= tmp->character->x - 9) && (data->markx <= tmp->character->x + 1)) {
+			if ((data->markx >= GetCharacterX(game, tmp->character) - 9) && (data->markx <= GetCharacterX(game, tmp->character) + 1)) {
 				data->score += 100 * tmp->speed;
 				SelectSpritesheet(game, tmp->character, "melt");
 				data->soloready++;
@@ -479,7 +565,7 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	(*progress)(game);
 
 	data->options.fullscreen = game->config.fullscreen;
-	data->options.fps = game->config.fps;
+//	data->options.fps = game->config.fps;
 	data->options.width = game->config.width;
 	data->options.height = game->config.height;
 	data->options.resolution = game->config.width / 320;
@@ -540,8 +626,8 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	}
 	(*progress)(game);
 
-	data->font_title = al_load_ttf_font(GetDataFilePath(game, "fonts/MonkeyIsland.ttf"),game->viewport.height*0.16,0 );
-	data->font = al_load_ttf_font(GetDataFilePath(game, "fonts/MonkeyIsland.ttf"),game->viewport.height*0.05,0 );
+	data->font_title = al_load_font(GetDataFilePath(game, "fonts/MonkeyIsland.ttf"),24,0 );
+	data->font = al_load_font(GetDataFilePath(game, "fonts/MonkeyIsland.ttf"),8,0 );
 	(*progress)(game);
 
 	data->ego = CreateCharacter(game, "ego");
@@ -600,7 +686,7 @@ void Gamestate_Stop(struct Game *game, struct MenuResources* data) {
 void Gamestate_Unload(struct Game *game, struct MenuResources* data) {
 	if (game->config.fx) {
 		al_clear_to_color(al_map_rgb(0,0,0));
-		DrawConsole(game);
+//		DrawConsole(game);
 		al_flip_display();
 		al_play_sample_instance(data->quit);
 		al_rest(0.3);
@@ -645,6 +731,7 @@ void Gamestate_Unload(struct Game *game, struct MenuResources* data) {
 	DestroyCharacter(game, data->cow);
 	DestroyCharacter(game, data->badguy);
 	TM_Destroy(data->timeline);
+	free(data);
 }
 
 // TODO: refactor to single Enqueue_Anim
@@ -874,7 +961,7 @@ void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEG
 						else
 							SetConfigOption(game, "SuperDerpy", "fullscreen", "0");
 						al_set_display_flag(game->display, ALLEGRO_FULLSCREEN_WINDOW, data->options.fullscreen);
-						SetupViewport(game);
+						SetupViewport(game, game->viewport_config);
 						PrintConsole(game, "Fullscreen toggled");
 						break;
 					case 1:
@@ -909,7 +996,7 @@ void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEG
 							al_resize_display(game->display, 320, 180);
 						}
 
-						SetupViewport(game);
+						SetupViewport(game, game->viewport_config);
 						PrintConsole(game, "Resolution changed");
 						break;
 					case 3:

@@ -1,5 +1,5 @@
-/*! \file loading.h
- *  \brief Loading screen headers.
+/*! \file common.c
+ *  \brief Common stuff that can be used by all gamestates.
  */
 /*
  * Copyright (c) Sebastian Krzyszkowiak <dos@dosowisko.net>
@@ -19,11 +19,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "common.h"
+#include <libsuperderpy.h>
 
-#include <allegro5/allegro.h>
-#include <allegro5/allegro_font.h>
+struct CommonResources* CreateGameData(struct Game *game) {
+	return calloc(1, sizeof(struct CommonResources));
+}
 
-/*! \brief Resources used by Loading state. */
-struct LoadingResources {
-		ALLEGRO_BITMAP *loading_bitmap; /*!< Rendered loading bitmap. */
-};
+void DestroyGameData(struct Game *game, struct CommonResources *resources) {
+	free(resources);
+}
+
